@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POLARLOGIX</title>
+<style>
+:root{
+  --bg:#f3f6f9; --card:#fff; --line:#e1e7ee; --line2:#edf1f5;
+  --text:#1b2a3a; --mute:#66768a; --dim:#93a0b0;
+  --navy:#0e3a58; --blue:#1673a6; --blueBg:#e3f0f8;
+  --red:#d92d20; --redBg:#fdecea; --amber:#c86a05; --amberBg:#fef3e0; --green:#12805c; --greenBg:#e3f4ec;
+  --font:Inter,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);line-height:1.4}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+.mono{font-family:var(--mono);font-size:12px}
+.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---- layout ---- */
+.app{display:grid;grid-template-columns:216px 1fr;grid-template-rows:56px 1fr;height:100vh}
+.top{grid-column:1/3;display:flex;align-items:center;gap:12px;padding:0 16px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:9px;width:200px;flex:none}
+.logo-box{width:32px;height:32px;border-radius:7px;background:var(--navy);color:#fff;display:grid;place-items:center}
+.logo b{font-size:15px;letter-spacing:.2px;display:block}
+.logo small{font-size:10px;color:var(--mute);display:block;line-height:1.15}
+.v{font-size:10px;font-weight:600;background:var(--blueBg);color:var(--blue);padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:1px}
+.st{font-size:12.5px;color:var(--mute);padding-left:12px;border-left:1px solid var(--line);white-space:nowrap}
+.st b{color:var(--text)}
+.dotg{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px}
+.search{flex:1;max-width:470px;min-width:120px;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#f8fafc;border-radius:6px;padding:7px 10px;color:var(--dim);white-space:nowrap;overflow:hidden}
+.top .sp{flex:1}
+.b-sar{background:var(--red);color:#fff;border:0;border-radius:6px;padding:7px 12px;font-weight:600;font-size:12px;display:flex;gap:6px;align-items:center}
+.b-sar.idle{background:#fff;color:var(--mute);border:1px solid var(--line);font-weight:500}
+.b-sat{border:1px solid #bcd9ea;background:#f0f7fc;color:var(--blue);border-radius:6px;padding:6px 11px;font-weight:600;font-size:12px;display:flex;gap:6px;align-items:center}
+.b-sat.off{border-color:#f3b8b3;background:var(--redBg);color:var(--red)}
+.b-ghost{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 10px;color:var(--mute);font-size:12px}
+.b-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.bell{position:relative;width:34px;height:34px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;background:#fff;color:var(--mute)}
+.bell i{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-style:normal;font-size:10px;font-weight:600;border-radius:9px;padding:0 5px;min-width:16px;text-align:center}
+.user{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:6px;padding:4px 10px 4px 5px;background:#fff}
+.av{width:24px;height:24px;border-radius:5px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:600}
+.user b{font-size:11.5px;display:block;line-height:1.1}.user small{font-size:10px;color:var(--mute)}
+
+.side{background:#fff;border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;overflow:auto}
+.side h6{font-size:10px;color:var(--dim);font-weight:600;letter-spacing:.6px;padding:4px 8px 8px}
+.nav{display:flex;align-items:center;gap:9px;width:100%;text-align:left;white-space:nowrap;padding:8px 9px;border:0;border-radius:6px;background:none;color:#3d4f63;font-size:13px;margin-bottom:1px}
+.nav:hover{background:#f0f4f8}
+.nav.on{background:var(--navy);color:#fff}
+.nav .n{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:600;border-radius:9px;padding:0 6px}
+.nav .n.a{background:var(--amber)}
+.edge{margin-top:auto;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--mute);background:#f8fafc}
+.edge b{color:var(--text);font-weight:600}
+
+main{overflow:auto;padding:18px 22px 30px}
+.view{display:none}.view.on{display:block}
+.foot{margin-top:22px;font-size:11px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+
+/* ---- page head ---- */
+.ph{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin-bottom:14px}
+.ph h1{font-size:19px;font-weight:650}
+.ph p{color:var(--mute);font-size:12.5px;margin-top:2px}
+.ph .sp{flex:1}
+.pill{border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--mute);background:#f8fafc}
+.chip{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:#eef2f6;color:var(--mute);letter-spacing:.2px;white-space:nowrap}
+.chip.g{background:var(--greenBg);color:var(--green)}.chip.a{background:var(--amberBg);color:var(--amber)}.chip.r{background:var(--redBg);color:var(--red)}.chip.b{background:var(--blueBg);color:var(--blue)}
+
+/* ---- cards ---- */
+.gr{display:grid;gap:14px}
+.g6{grid-template-columns:repeat(6,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr 1fr}
+.g-main{grid-template-columns:1.9fr 1fr}
+.mb{margin-bottom:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.card-h h3{font-size:13.5px;font-weight:650}
+.card-h .sp{flex:1}
+.card-h a{font-size:12px;color:var(--blue);font-weight:600;cursor:pointer;text-decoration:none}
+.kpi{padding:12px 14px}
+.kpi .l{font-size:10.5px;color:var(--mute);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.kpi .v2{font-size:27px;font-weight:600;margin:3px 0 2px;letter-spacing:-.3px}
+.kpi .s{font-size:11.5px;color:var(--mute)}
+.kpi.red{border-color:#f0b4ae;background:#fffafa}.kpi.red .v2{color:var(--red)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12.5px}
+.row b{font-weight:600}
+.bar{height:6px;background:#e9eef3;border-radius:4px;overflow:hidden;margin:1px 0 6px}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:4px}
+.mute{color:var(--mute)}.fine{font-size:11.5px;color:var(--mute)}
+.note{background:#f6f8fa;border:1px solid var(--line2);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--mute)}
+
+/* ---- buttons ---- */
+.btn{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:6px;padding:7px 13px;font-weight:600;font-size:12.5px}
+.btn:hover{background:#125f88}
+.btn.w{background:#fff;color:var(--text);border-color:var(--line)}.btn.w:hover{border-color:var(--blue);color:var(--blue)}
+.btn.r{background:var(--red);border-color:var(--red)}.btn.r:hover{background:#b42318}
+.btn.s{padding:4px 9px;font-size:11.5px}
+.btn.full{width:100%}
+
+/* ---- tables ---- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mute);font-weight:600;padding:7px 10px;border-bottom:1px solid var(--line);background:#fafbfc}
+td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+input[type=text],select{border:1px solid var(--line);border-radius:6px;padding:6px 9px;background:#fff}
+input[type=text]:focus,select:focus{outline:2px solid #bcd9ea;border-color:var(--blue)}
+.form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+
+/* ---- alerts ---- */
+.al{border:1px solid;border-left-width:3px;border-radius:6px;padding:9px 11px;margin-bottom:8px;font-size:12px}
+.al.r{background:#fff7f6;border-color:#f3c3be;border-left-color:var(--red)}
+.al.a{background:#fffaf0;border-color:#f3d9ac;border-left-color:#e08a12}
+.al.b{background:#f5faff;border-color:#c9e0f0;border-left-color:var(--blue)}
+.al .t{display:flex;justify-content:space-between;font-weight:650;font-size:12.5px;margin-bottom:2px}
+.al .t span:last-child{font-weight:400;color:var(--mute);font-size:11px}
+.al p{color:#4b5b6e}
+.al a{color:var(--blue);font-weight:600;font-size:11.5px;cursor:pointer;display:inline-block;margin-top:4px}
+
+/* ---- map ---- */
+.map{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#bcd3e6}
+.map svg{display:block;width:100%;height:auto}
+.mt{font-family:Inter,"Segoe UI",Arial,sans-serif;font-weight:600;font-size:calc(7.5px*var(--k,1));fill:#1b2a3a;paint-order:stroke;stroke:#fff;stroke-width:calc(2.4px*var(--k,1));stroke-linejoin:round}
+.ms{font-family:var(--mono);font-size:calc(6px*var(--k,1));fill:#55677b;paint-order:stroke;stroke:#fff;stroke-width:calc(2px*var(--k,1))}
+.mg{font-family:var(--mono);font-size:calc(5.5px*var(--k,1));fill:#7b8da0}
+.mw{font-family:Inter,Arial,sans-serif;font-style:italic;font-weight:500;font-size:calc(7px*var(--k,1));fill:#6f8ba4;letter-spacing:calc(1.4px*var(--k,1))}
+.mland{font-family:Inter,Arial,sans-serif;font-weight:600;font-size:calc(6.5px*var(--k,1));fill:#b3bfcc;letter-spacing:calc(2px*var(--k,1))}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--mute);margin-top:9px}
+.legend i{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:-1px}
+.lyr{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.lyr button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 10px;font-size:12px;color:var(--mute)}
+.lyr button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* ---- missions ---- */
+.ms-item{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.ms-item:hover{border-color:#a9c9dd}.ms-item.sel{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+.ms-item .t{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.ms-item h4{font-size:14px;font-weight:650}
+.ms-id{font-family:var(--mono);font-size:10.5px;background:#eef3f8;color:#3a5a75;padding:1px 6px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;margin:9px 0 8px;padding-top:8px;border-top:1px solid var(--line2)}
+.meta small{display:block;color:var(--dim);font-size:10.5px}
+
+/* ---- chain / timeline ---- */
+.chain{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center}
+.chain .n{width:28px;height:28px;border-radius:50%;margin:0 auto 5px;display:grid;place-items:center;font-size:12px;font-weight:600;border:2px solid var(--line);background:#fff;color:var(--mute)}
+.chain .d .n{background:var(--blue);border-color:var(--blue);color:#fff}
+.chain .c .n{border-color:#e08a12;color:#e08a12}
+.chain b{font-size:12px;display:block}.chain small{font-size:11px;color:var(--mute)}
+.tl{padding-left:4px}
+.tl div{position:relative;padding:0 0 12px 22px;font-size:12.5px;color:var(--dim)}
+.tl div::before{content:"";position:absolute;left:4px;top:6px;bottom:-6px;width:1px;background:var(--line)}
+.tl div:last-child::before{display:none}
+.tl div::after{content:"";position:absolute;left:0;top:3px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #cbd5df}
+.tl div.d{color:var(--text)}.tl div.d::after{background:var(--blue);border-color:var(--blue)}
+.tl div.c{color:var(--text)}.tl div.c::after{background:var(--red);border-color:var(--red)}
+.tl b{display:block;font-size:12.5px}.tl small{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+
+/* ---- sync ---- */
+.q{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:12.5px}
+.q.s{border-left:3px solid var(--green)}.q.p{border-left:3px solid #e08a12}.q.c{border-left:3px solid var(--red);background:#fffafa}
+.q .m{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.vizbox{position:relative;height:110px;border:1px solid var(--line);border-radius:6px;background:#fafbfc;margin-bottom:12px}
+.node{position:absolute;top:50%;transform:translateY(-50%);width:88px;text-align:center;border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px 4px;font-size:12px;font-weight:600}
+.node small{display:block;font-weight:400;color:var(--mute);font-size:10.5px}
+.link{position:absolute;left:112px;right:112px;top:50%;height:2px;background:var(--blue)}
+.link.off{background:repeating-linear-gradient(90deg,var(--red) 0 6px,transparent 6px 12px)}
+.linkl{position:absolute;left:0;right:0;top:calc(50% + 8px);text-align:center;font-size:11px;color:var(--mute)}
+.pk{position:absolute;top:calc(50% - 4px);width:9px;height:9px;border-radius:2px;background:var(--blue)}
+
+/* ---- chat ---- */
+.chat{height:380px;overflow:auto;display:flex;flex-direction:column;gap:9px;padding:2px 2px 8px}
+.msg{max-width:80%;padding:9px 12px;border-radius:8px;font-size:13px}
+.msg.u{align-self:flex-end;background:var(--navy);color:#fff}
+.msg.a{align-self:flex-start;background:#f4f7fa;border:1px solid var(--line)}
+.msg .src{margin-top:6px;padding-top:6px;border-top:1px dashed #cfd8e1;font-size:11px;color:var(--mute);font-family:var(--mono)}
+.sug{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sug button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:5px 11px;font-size:12px;color:var(--mute)}
+.sug button:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ---- risk ---- */
+.rr{display:grid;grid-template-columns:150px 1fr 64px;gap:10px;align-items:center;margin:9px 0;font-size:12.5px}
+.rr b{text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--blue)}
+
+/* ---- toast + drawer ---- */
+#toast{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:6px;z-index:60}
+.toast{background:#1b2a3a;color:#fff;padding:9px 13px;border-radius:6px;font-size:12.5px;max-width:320px}
+.toast.r{background:var(--red)}
+.drawer{position:fixed;top:56px;right:0;width:320px;bottom:0;background:#fff;border-left:1px solid var(--line);padding:16px;z-index:50;display:none;overflow:auto}
+.drawer.on{display:block}
+.drawer h4{font-size:14px;margin-bottom:4px}
+.ds{display:flex;gap:9px;padding:7px 0;font-size:12.5px;color:var(--mute);border-bottom:1px solid var(--line2)}
+.ds i{font-style:normal;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:10.5px;flex:none}
+.ds.d{color:var(--text)}.ds.d i{background:var(--green);border-color:var(--green);color:#fff}
+.ds.c{color:var(--text);font-weight:600}.ds.c i{border-color:var(--blue);color:var(--blue)}
+
+@media(max-width:1180px){.g6{grid-template-columns:repeat(3,1fr)}.g-main,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){
+  body{overflow-x:hidden}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;height:auto;min-height:100vh}
+  .top{flex-wrap:wrap;padding:8px 10px;gap:8px}
+  .logo{width:auto}.logo small,.search,.st,.b-ghost,.top .sp,.user>div:last-child{display:none}
+  .user{padding:3px}
+  .b-sar{font-size:11px;padding:6px 9px}.b-sat{font-size:11px;padding:6px 9px}
+  .side{position:fixed;left:0;right:0;bottom:0;z-index:40;flex-direction:row;overflow-x:auto;padding:5px;border-right:0;border-top:1px solid var(--line);height:58px;gap:2px}
+  .side h6,.edge{display:none}
+  .nav{flex:none;flex-direction:column;justify-content:center;gap:2px;width:auto;min-width:92px;padding:5px 8px;font-size:10px;white-space:nowrap;text-align:center;position:relative;margin:0}
+  .nav .n{position:absolute;top:1px;right:14px}
+  main{padding:12px 10px 76px;overflow:visible;min-width:0}
+  .gr>*,.card,.ph>div{min-width:0}
+  .g6{grid-template-columns:1fr 1fr}.g-main,.g4,.g3,.g2,.gr[style]{grid-template-columns:minmax(0,1fr) !important}
+  .g6{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .ph{flex-wrap:wrap}.ph .sp{display:none}.pill{white-space:normal}
+  .card-h{flex-wrap:wrap}.card-h .sp{display:none}
+  .kpi .v2{font-size:22px}.kpi .v2[style]{font-size:14px !important;line-height:1.2}
+  .meta{grid-template-columns:1fr 1fr}
+  .rr{grid-template-columns:1fr 60px}.rr input{grid-column:1/3}
+  .form input,.form select{flex:1;min-width:0}
+  table{display:block;overflow-x:auto;white-space:nowrap}
+  .drawer{top:auto;height:60%;width:100%;border-left:0;border-top:1px solid var(--line)}
+  #toast{bottom:68px;right:10px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ================= top bar ================= -->
+<header class="top">
+  <div class="logo"><div class="logo-box"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6z"/></svg></div>
+    <div><b>POLARLOGIX<span class="v">V2.4</span></b><small>Polar expedition logistics &amp; GIS</small></div></div>
+  <div class="st"><span class="dotg"></span>Station: <b>Bharati Station</b></div>
+  <div class="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Search expeditions, snowcats, personnel, SAR cases</div>
+  <div class="sp"></div>
+  <button class="b-ghost" onclick="$('drawer').classList.toggle('on')">Demo steps</button>
+  <button class="b-sar idle" id="sarBtn" onclick="go('sar')">No active incident</button>
+  <button class="b-sat" id="netBtn" onclick="toggleNet()"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12a10 10 0 0114 0M8 15a6 6 0 018 0"/><circle cx="12" cy="18" r="1"/></svg><span id="netTxt">SAT COMM (1KB)</span></button>
+  <div class="bell"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 004 0"/></svg><i id="bellN">2</i></div>
+  <div class="user"><div class="av">M</div><div><b>BHARATI-CONTROL-1</b><small>Mission Manager</small></div></div>
+</header>
+
+<!-- ================= sidebar ================= -->
+<nav class="side" id="side">
+  <h6>EXPEDITION OPERATIONS</h6>
+  <button class="nav on" data-v="dash"><i data-i="dash"></i>Dashboard</button>
+  <button class="nav" data-v="missions"><i data-i="missions"></i>Missions</button>
+  <button class="nav" data-v="gis"><i data-i="gis"></i>Live GIS Map</button>
+  <button class="nav" data-v="assets"><i data-i="assets"></i>Assets &amp; Fleet</button>
+  <button class="nav" data-v="cargo"><i data-i="cargo"></i>Logistics &amp; Cargo</button>
+  <button class="nav" data-v="people"><i data-i="people"></i>Personnel</button>
+  <button class="nav" data-v="risk"><i data-i="risk"></i>Route Risk</button>
+  <button class="nav" data-v="cold"><i data-i="cold"></i>Cold-Chain Samples</button>
+  <button class="nav" data-v="sar"><i data-i="sar"></i>Emergencies &amp; SAR<span class="n" id="sarBadge" style="display:none">1</span></button>
+  <button class="nav" data-v="inv"><i data-i="inv"></i>Inventory &amp; 5-Day</button>
+  <button class="nav" data-v="ai"><i data-i="ai"></i>AI Assistant</button>
+  <button class="nav" data-v="sync"><i data-i="sync"></i>Offline Sync<span class="n a" id="syncBadge" style="display:none">0</span></button>
+  <div class="edge"><b>Local Edge Engine</b> <span style="color:var(--green)">&#9679; SQLite</span><br><span class="mono" style="font-size:10.5px">Node: IRIDIUM_SBD<br>Clock vector: v2</span></div>
+</nav>
+
+<main>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="view on" id="v-dash">
+  <div class="ph"><div><h1>Mission Control Overview <span class="chip g" style="vertical-align:3px">OPERATIONAL</span></h1>
+    <p>Centralized telemetry, field team safety, cryogenic cold-chain and low-bandwidth synchronization</p></div>
+    <div class="sp"></div><div class="pill mono" id="clock">UTC 00:00 | Bharati Base</div></div>
+
+  <div class="gr g6 mb">
+    <div class="card kpi"><div class="l">Active expeditions</div><div class="v2">03</div><div class="s">4 total registered</div></div>
+    <div class="card kpi"><div class="l">Field personnel</div><div class="v2">37</div><div class="s" id="kpiMissed" style="color:var(--amber)">1 check-in due soon</div></div>
+    <div class="card kpi"><div class="l">Active assets</div><div class="v2">126</div><div class="s">Snowcats, UAVs, ships</div></div>
+    <div class="card kpi"><div class="l">Cargo in transit</div><div class="v2">18</div><div class="s">5 intermodal stages</div></div>
+    <div class="card kpi" id="kpiAlertCard"><div class="l">Critical alerts</div><div class="v2" id="kpiAlert">00</div><div class="s" id="kpiAlertNote">No SAR case</div></div>
+    <div class="card kpi"><div class="l">Network link</div><div class="v2" style="font-size:17px;padding:6px 0 5px;text-transform:uppercase" id="kpiLink">Low bandwidth</div><div class="s" id="kpiLinkNote">Synchronized</div></div>
+  </div>
+
+  <div class="gr g-main mb">
+    <div class="card">
+      <div class="card-h"><h3>Antarctic Expedition GIS Overview</h3><span class="chip">Indian sector: Dronning Maud Land to Prydz Bay</span><div class="sp"></div><a onclick="go('gis')">Open full interactive GIS &rsaquo;</a></div>
+      <div class="map" id="dashMap"></div>
+      <div class="legend"><span><i style="background:var(--navy)"></i>Station</span><span><i style="background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)"></i>Vessel</span><span><i style="background:var(--red);border-radius:50%"></i>Incident</span></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>Critical Mission Alerts</h3><span class="chip a" id="alertCount">2 open</span><div class="sp"></div><a onclick="go('sar')">SAR hub</a></div><div id="alertList"></div></div>
+  </div>
+
+  <div class="gr g4">
+    <div class="card"><div class="card-h"><h3>5-Day Survival Check</h3><div class="sp"></div><span class="chip g" id="survTag">PASSED</span></div>
+      <div class="row"><span class="mute">Ration packs (food)</span><b id="s1t">7.8 days</b></div><div class="bar"><i id="s1" style="width:78%;background:var(--green)"></i></div>
+      <div class="row"><span class="mute">Diesel (heating / melt)</span><b id="s2t">6.5 days</b></div><div class="bar"><i id="s2" style="width:65%;background:var(--green)"></i></div>
+      <div class="row"><span class="mute">Melt-water production</span><b id="s3t">6.0 days</b></div><div class="bar"><i id="s3" style="width:60%"></i></div>
+      <div class="fine">Required minimum: 5.0 days</div></div>
+    <div class="card"><div class="card-h"><h3>Station Fuel &amp; Power</h3></div>
+      <div class="row"><span class="mute">Bulk tanks</span><b class="mono">48,500 L</b></div>
+      <div class="row"><span class="mute">Daily burn rate</span><b class="mono">420 L/day</b></div>
+      <div class="row"><span class="mute">Days remaining</span><b class="mono" style="color:var(--green)">115 d</b></div>
+      <div class="row"><span class="mute">Traverse sledge reserve</span><b class="mono" style="color:var(--amber)">1,250 L</b></div>
+      <div class="fine" style="margin-top:6px">Generators: 2 x 150 kVA</div></div>
+    <div class="card"><div class="card-h"><h3>Sample Cold-Chain</h3><div class="sp"></div><span class="chip a">WARMING</span></div>
+      <div class="row"><span class="mute">Sample</span><b class="mono">SMP-ICE-43-01</b></div>
+      <div class="row"><span class="mute">Current temp</span><b class="mono">-21.6 &deg;C</b></div>
+      <div class="row"><span class="mute">Safe threshold</span><b class="mono">-15.0 &deg;C</b></div>
+      <div class="row"><span class="mute">Breach countdown</span><b class="mono" style="color:var(--amber)">~8.3 hours</b></div></div>
+    <div class="card"><div class="card-h"><h3>Polar Weather</h3><div class="sp"></div><span class="chip g">AWS ONLINE</span></div>
+      <div class="row"><span class="mute">Surface temp</span><b class="mono">-28.4 &deg;C</b></div>
+      <div class="row"><span class="mute">Wind</span><b class="mono" style="color:var(--amber)">24 kt (gust 30)</b></div>
+      <div class="row"><span class="mute">Visibility</span><b class="mono">4.5 km, drift</b></div>
+      <div class="row"><span class="mute">Barometer</span><b class="mono">982.5 hPa</b></div></div>
+  </div>
+</section>
+
+<!-- ================= MISSIONS ================= -->
+<section class="view" id="v-missions">
+  <div class="ph"><div><h1>Expeditions &amp; Traverse Missions <span class="chip">4 total</span></h1><p>Planning, timeline tracking, field party allocation and route authorization</p></div>
+    <div class="sp"></div><button class="btn" onclick="toast('Plan New Expedition: form not built yet')">+ Plan New Expedition</button></div>
+  <div class="gr" style="grid-template-columns:1.5fr 1fr;align-items:start"><div id="missionList"></div><div class="card" id="dossier"></div></div>
+</section>
+
+<!-- ================= GIS ================= -->
+<section class="view" id="v-gis">
+  <div class="ph"><div><h1>Live GIS Map</h1><p>Indian sector of East Antarctica. Coastline and ice shelves are real (Natural Earth 1:50m); asset positions are demo values.</p></div></div>
+  <div class="gr g-main">
+    <div class="card"><div class="lyr" id="layerBar"></div><div class="map" id="gisMap"></div>
+      <div class="legend"><span><i style="background:var(--navy)"></i>Station</span><span><i style="background:#fff;border:2px solid var(--navy)"></i>Summer base (Prydz Bay view)</span><span><i style="background:var(--green);border-radius:50%"></i>Field team (Prydz Bay view)</span><span><i style="background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)"></i>Vessel</span><span><i style="background:var(--red);border-radius:50%"></i>Incident</span></div><div class="fine" style="margin-top:8px">Projection: polar stereographic (south), 0&deg; meridian up. Sea-ice and weather layers are planned from NSIDC / Copernicus, not loaded in this prototype.</div></div>
+    <div class="card"><div class="card-h"><h3>Tracked positions</h3></div>
+      <table><thead><tr><th>Object</th><th>Position</th><th>Source</th></tr></thead><tbody id="posBody"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= ASSETS ================= -->
+<section class="view" id="v-assets">
+  <div class="ph"><div><h1>Assets &amp; Fleet</h1><p>Vehicles, aircraft, power and cold-storage units</p></div></div>
+  <div class="card">
+    <div class="form"><input type="text" id="aName" placeholder="Asset name" style="width:200px"><select id="aType"><option>Snowcat</option><option>UAV</option><option>Generator</option><option>Sledge</option><option>Cold storage</option></select><select id="aSt"><option>Bharati</option><option>Maitri</option><option>Cape Town hub</option></select><button class="btn" onclick="addAsset()">Add asset</button></div>
+    <table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Location</th><th>Status</th><th class="r">Fuel / battery</th><th>Last seen</th><th></th></tr></thead><tbody id="assetBody"></tbody></table>
+  </div>
+</section>
+
+<!-- ================= CARGO ================= -->
+<section class="view" id="v-cargo">
+  <div class="ph"><div><h1>Logistics &amp; Cargo</h1><p>Chain of custody from NCPOR Goa to the station. Each handoff is recorded.</p></div></div>
+  <div class="card mb"><div class="card-h"><h3>Consignment CRG-0231</h3><span class="chip">Ice-core drilling spares, 412 kg</span></div>
+    <div id="chain"></div><div class="bar" style="margin-top:12px"><i id="chainBar" style="width:40%"></i></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="cargoHandoff()">Record next handoff</button><span class="chip a">Air limit check: 412 kg of 1,500 kg</span></div></div>
+  <div class="gr g2">
+    <div class="card"><div class="card-h"><h3>Pre-departure cargo check</h3></div>
+      <table><thead><tr><th>Item</th><th class="r">Weight</th><th>Mode</th><th>Check</th></tr></thead><tbody>
+      <tr><td>Drill spares</td><td class="r mono">180 kg</td><td>Air or ship</td><td><span class="chip g">OK</span></td></tr>
+      <tr><td>Li-ion battery pack</td><td class="r mono">64 kg</td><td>Ship only</td><td><span class="chip r">NO AIR</span></td></tr>
+      <tr><td>Jet A-1 drums</td><td class="r mono">208 kg</td><td>Ship only</td><td><span class="chip a">ARRANGE AT CAPE TOWN</span></td></tr>
+      <tr><td>Soil test kit</td><td class="r mono">12 kg</td><td>Air or ship</td><td><span class="chip a">CLEANLINESS DECL.</span></td></tr></tbody></table></div>
+    <div class="card"><div class="card-h"><h3>Rules used</h3></div>
+      <div class="row"><span class="mute">Small flights carry</span><b class="mono">1,500 - 1,800 kg</b></div>
+      <div class="fine" style="margin-bottom:8px">Includes people, personal and scientific cargo and emergency kits.</div>
+      <div class="row"><span class="mute">Hazardous cargo</span><b>Not by air</b></div>
+      <div class="fine" style="margin-bottom:8px">Gases, chemicals, fuel, lithium-ion batteries: arranged at Cape Town or shipped.</div>
+      <div class="row"><span class="mute">Cape Town to Bharati</span><b>No direct flight</b></div>
+      <div class="fine" style="margin-bottom:8px">Bharati is reached by air only via Maitri (Novo, then Zenit airfield).</div>
+      <div class="note">Taken from NCPOR ISEA advertisements. Check the current one before real use.</div></div>
+  </div>
+</section>
+
+<!-- ================= PERSONNEL ================= -->
+<section class="view" id="v-people">
+  <div class="ph"><div><h1>Personnel</h1><p>Check-in schedule for field parties. Showing 8 of 37.</p></div></div>
+  <div class="card"><table><thead><tr><th>Name</th><th>Role</th><th>Team</th><th>Location</th><th>Last check-in</th><th>Next due</th><th>Status</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
+</section>
+
+<!-- ================= RISK ================= -->
+<section class="view" id="v-risk">
+  <div class="ph"><div><h1>Route Risk</h1><p>Every score shows its parts and how old the data is</p></div></div>
+  <div class="gr g2">
+    <div class="card"><div class="card-h"><h3>Inputs</h3><span class="chip">Bharati to Sandhi (indicative)</span></div>
+      <div class="rr"><span>Sea-ice concentration</span><input type="range" id="rIce" min="0" max="100" value="62" oninput="calcRisk()"><b id="rIceV"></b></div>
+      <div class="rr"><span>Wind speed</span><input type="range" id="rWind" min="0" max="60" value="24" oninput="calcRisk()"><b id="rWindV"></b></div>
+      <div class="rr"><span>Visibility</span><input type="range" id="rVis" min="0" max="20" value="4" oninput="calcRisk()"><b id="rVisV"></b></div>
+      <div class="rr"><span>Route length</span><input type="range" id="rDist" min="50" max="600" value="280" oninput="calcRisk()"><b id="rDistV"></b></div>
+      <div class="rr"><span>Data age</span><input type="range" id="rAge" min="0" max="72" value="6" oninput="calcRisk()"><b id="rAgeV"></b></div>
+      <div class="note">Score = 0.35 ice + 0.25 wind + 0.15 visibility + 0.10 distance + 0.15 data age. Prototype weights, not validated. Decision support only.</div></div>
+    <div class="card"><div class="card-h"><h3>Result</h3></div>
+      <div style="text-align:center;padding:4px 0 10px"><div style="font-size:46px;font-weight:650;letter-spacing:-1px" id="rScore">0.00</div><span class="chip" id="rBand">LOW</span></div>
+      <div id="rParts"></div><div class="note" id="rWhy" style="margin:8px 0 10px"></div><div class="gr g2" id="rAlt"></div></div>
+  </div>
+</section>
+
+<!-- ================= COLD ================= -->
+<section class="view" id="v-cold">
+  <div class="ph"><div><h1>Cold-Chain Samples</h1><p>Predicts when a sample will cross its safe limit</p></div></div>
+  <div class="gr g2">
+    <div class="card"><div class="card-h"><h3>SMP-ICE-43-01</h3><span class="chip">Container AST-CRYO-09</span></div>
+      <div id="coldChart"></div>
+      <div class="row"><span class="mute">Current</span><b class="mono" id="cNow"></b></div>
+      <div class="row"><span class="mute">Warming rate</span><b class="mono" id="cRate"></b></div>
+      <div class="row"><span class="mute">Reaches -15 &deg;C in</span><b class="mono" id="cETA"></b></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="coldDelay()">Simulate 4 h traverse delay</button><button class="btn w" onclick="coldReset()">Reset</button></div></div>
+    <div class="card"><div class="card-h"><h3>Telemetry filter</h3></div>
+      <div class="fine" style="margin-bottom:6px">Raw sensor values are kept. A filtered line is drawn next to them and outliers are flagged, not deleted.</div>
+      <div id="telChart"></div>
+      <div class="legend"><span><i style="background:#93a0b0"></i>Raw</span><span><i style="background:var(--blue)"></i>Filtered</span><span><i style="background:var(--red);border-radius:50%"></i>Flagged outlier</span></div></div>
+  </div>
+</section>
+
+<!-- ================= SAR ================= -->
+<section class="view" id="v-sar">
+  <div class="ph"><div><h1>Emergencies &amp; SAR <span class="chip" id="sarState" style="vertical-align:3px">STANDBY</span></h1><p>Missed check-in, incident, resources, search area. Every step is logged.</p></div>
+    <div class="sp"></div><button class="btn r" onclick="runSAR()">Run missed check-in scenario</button><button class="btn w" onclick="resetSAR()">Reset</button></div>
+  <div class="gr" style="grid-template-columns:1fr 1.5fr;align-items:start">
+    <div class="card"><div class="card-h"><h3>Incident workflow</h3></div><div class="tl" id="sarTL"></div><div class="note">Simulation only. Not certified SAR software.</div></div>
+    <div class="card"><div class="card-h"><h3>Last known position and search area</h3><div class="sp"></div><span class="mono mute" id="sarInfo">Waiting for scenario</span></div>
+      <div class="map" id="sarMap" style="background:#eef3f7"></div>
+      <div class="gr g4" style="margin-top:10px;gap:8px">
+        <div><div class="fine">Field team</div><b>Bravo (3)</b></div><div><div class="fine">Wind</div><b>24 kt from 095&deg;</b></div>
+        <div><div class="fine">Last beacon</div><b class="mono" id="sarBeacon">-</b></div><div><div class="fine">Search cells</div><b id="sarCells">-</b></div></div></div>
+  </div>
+</section>
+
+<!-- ================= INVENTORY ================= -->
+<section class="view" id="v-inv">
+  <div class="ph"><div><h1>Inventory &amp; 5-Day Survival</h1><p>Days left = stock / average daily use (last 7 days). Below minimum stock raises an alert.</p></div></div>
+  <div class="gr g2">
+    <div class="card"><div class="card-h"><h3>Stock at Bharati</h3></div><table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Use/day</th><th class="r">Days left</th><th>Status</th></tr></thead><tbody id="invBody"></tbody></table></div>
+    <div class="card"><div class="card-h"><h3>Days-left forecast</h3></div><div id="invChart"></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="invShortage()">Simulate fuel shortage</button><button class="btn w" onclick="invReset()">Reset</button></div></div>
+  </div>
+</section>
+
+<!-- ================= AI ================= -->
+<section class="view" id="v-ai">
+  <div class="ph"><div><h1>AI Assistant</h1><p>Answers only from operational records and lists the records it used. It does not make decisions.</p></div></div>
+  <div class="card"><div class="chat" id="chat"></div><div class="sug" id="sugg"></div></div>
+</section>
+
+<!-- ================= SYNC ================= -->
+<section class="view" id="v-sync">
+  <div class="ph"><div><h1>Offline Sync</h1><p>Field devices write locally first. Changes wait in a queue and merge when the link is back.</p></div></div>
+  <div class="gr g2" style="align-items:start">
+    <div class="card"><div class="card-h"><h3>Field device to HQ</h3></div>
+      <div class="vizbox" id="viz"><div class="node" style="left:12px">Field tablet<small>Team Bravo</small></div><div class="link" id="linkLine"></div><div class="linkl" id="linkLbl">Iridium link</div><div class="node" style="right:12px">NCPOR HQ<small>Goa</small></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn" onclick="fieldCheckin()">Submit check-in</button><button class="btn w" onclick="fieldHandoff()">Log cargo handoff</button><button class="btn w" onclick="fieldStock()">Update stock</button><button class="btn w" onclick="fieldConflict()">Create edit conflict</button></div>
+      <div class="row"><span class="mute">Link</span><b id="syncState">Online</b></div><div class="row"><span class="mute">Pending events</span><b id="syncPend">0</b></div>
+      <button class="btn full" style="margin-top:8px" onclick="syncNow()">Sync now</button></div>
+    <div class="card"><div class="card-h"><h3>Event queue</h3><div class="sp"></div><span class="fine" id="qSub"></span></div><div id="queue"></div>
+      <div class="note" style="margin-top:8px">Simple fields: last write wins on a logical clock. Safety fields: both versions are kept and flagged for the operator.</div></div>
+  </div>
+</section>
+
+<div class="foot">Prototype build. Personnel, cargo, inventory and telemetry are synthetic. Coastline: Natural Earth. Risk score and SAR grid are simulations.</div>
+</main>
+</div>
+
+<div class="drawer" id="drawer"><h4>Demo steps</h4><div class="fine" style="margin-bottom:8px">Runs the demo one step at a time.</div><div id="demoSteps"></div>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn s" onclick="demoNext()">Run next step</button><button class="btn w s" onclick="demoReset()">Restart</button></div></div>
+<div id="toast"></div>
+
+<script>
+const MAP = __MAPDATA__;
+const $ = id => document.getElementById(id);
+const ICONS = {
+ dash:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+ missions:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6z"/>',
+ gis:'<path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+ assets:'<path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/>',
+ cargo:'<path d="M2 6h11v10H2zM13 9h4l3 3v4h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+ people:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 5a3.2 3.2 0 010 6M18 14c2 .7 3.5 2.7 3.5 5.5"/>',
+ risk:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/>',
+ cold:'<path d="M12 2v20M4.9 7l14.2 10M4.9 17L19.1 7"/>',
+ sar:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
+ inv:'<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+ ai:'<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>',
+ sync:'<path d="M4 12a8 8 0 0113-6l3 3M20 12a8 8 0 01-13 6l-3-3M20 4v5h-5M4 20v-5h5"/>'
+};
+document.querySelectorAll('i[data-i]').forEach(e=>{e.outerHTML='<svg class="ic" viewBox="0 0 24 24">'+ICONS[e.dataset.i]+'</svg>'});
+
+/* ============ state ============ */
+const S={view:'wide',online:true,queue:[],sarActive:false,sarStep:0,sel:0,chain:2,coldDelay:0,alerts:[],
+ layers:{grat:true,shelf:true,vessel:true,st:true,route:true,sar:true}};
+const INV0=[{n:'Ration packs',q:312,u:40,min:200,unit:'packs'},{n:'Diesel (traverse)',q:1250,u:190,min:800,unit:'L'},{n:'Melt-water fuel',q:96,u:16,min:60,unit:'kg'},{n:'Medical kits',q:14,u:.3,min:8,unit:'kits'},{n:'Li-ion spare cells',q:22,u:1.2,min:10,unit:'cells'}];
+S.inv=JSON.parse(JSON.stringify(INV0));
+function nowT(){return new Date().toISOString().substr(11,5)}
+function toast(m,red){const b=$('toast');while(b.children.length>=2)b.firstChild.remove();const t=document.createElement('div');t.className='toast'+(red?' r':'');t.textContent=m;b.appendChild(t);setTimeout(()=>t.remove(),2800)}
+setInterval(()=>{$('clock').textContent='UTC '+nowT()+' | Bharati Base'},1000);$('clock').textContent='UTC '+nowT()+' | Bharati Base';
+
+function go(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));$('v-'+v).classList.add('on');
+  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('on',n.dataset.v===v));
+  ({missions:drawMissions,gis:drawGIS,assets:drawAssets,cargo:drawChain,people:drawPeople,risk:calcRisk,cold:drawCold,sar:drawSAR,inv:drawInv,sync:drawQueue})[v]?.();
+  document.querySelector('main').scrollTop=0;
+}
+document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>go(n.dataset.v));
+
+/* ============ map (real coastline, polar stereographic) ============ */
+function P(lat,lon){const r=2000*Math.tan(Math.PI/4+lat*Math.PI/360),l=lon*Math.PI/180;return[r*Math.sin(l),-r*Math.cos(l)]}
+const PT={maitri:P(-70.7667,11.7333),bharati:P(-69.4083,76.1867),sandhi:P(-70.6,69.6),ship:P(-63.2,47),bravo:P(-71.0,74.8)};
+function viewFor(zoom){
+  if(!zoom)return MAP.view;
+  const [bx,by]=PT.bharati,[sx,sy]=PT.sandhi;return[(bx+sx)/2-62,(by+sy)/2-46,124,83];
+}
+function realMap(o={}){
+  const L=o.layers||{grat:true,shelf:true,vessel:true,st:true,route:true,sar:true},zoom=!!o.zoom;
+  const [vx,vy,vw,vh]=viewFor(zoom),k=vw/500;
+  const T=(cls,x,y,dx,dy,txt,an,st)=>`<text class="${cls}" x="${(x+dx*k).toFixed(1)}" y="${(y+dy*k).toFixed(1)}"${an?` text-anchor="${an}"`:''}${st?` style="${st}"`:''}>${txt}</text>`;
+  const inV=(p)=>p[0]>vx+4*k&&p[0]<vx+vw-4*k&&p[1]>vy+4*k&&p[1]<vy+vh-4*k;
+  let s=`<svg viewBox="${vx.toFixed(1)} ${vy.toFixed(1)} ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg" style="--k:${k.toFixed(3)}">`;
+  if(L.grat)s+=`<path d="${MAP.grat}" fill="none" stroke="#b9c9d8" stroke-width="${(.45*k).toFixed(2)}"/>`;
+  s+=`<path d="${MAP.land}" fill="#fbfcfd" stroke="#7d93aa" stroke-width="${(.55*k).toFixed(2)}"/>`;
+  if(L.shelf)s+=`<path d="${MAP.shelf}" fill="#dde9f3" stroke="#7d93aa" stroke-width="${(.4*k).toFixed(2)}"/>`;
+  if(L.grat){
+    if(!zoom)MAP.labels.forEach(l=>s+=T('mg',l[1],l[2],0,0,l[0]));
+    else[['70\u00b0E',-67.0,70],['80\u00b0E',-67.0,80],['70\u00b0S',-70,60.5],['70\u00b0S',-70,84.5]].forEach(g=>{const q=P(g[1],g[2]);if(inV(q))s+=T('mg',q[0],q[1],0,0,g[0])})}
+  if(!zoom){let t=P(-73.5,32);s+=T('mland',t[0],t[1],0,0,'DRONNING MAUD LAND');t=P(-67.9,72.5);s+=T('mw',t[0],t[1],-14,0,'Prydz Bay');t=P(-63.2,25);s+=T('mw',t[0],t[1],0,0,'Southern Ocean')}
+  else{let t=P(-67.5,71);s+=T('mw',t[0],t[1],0,0,'Prydz Bay');t=P(-72.6,66.5);s+=T('ms',t[0],t[1],0,0,'Amery Ice Shelf','',"font-style:italic")}
+  const [bx,by]=PT.bharati,[mx,my]=PT.maitri,[sx,sy]=PT.sandhi,[vx2,vy2]=PT.ship,[tx,ty]=PT.bravo,h=3.5*k;
+  const sq=(x,y,fill,stk,sw)=>`<rect x="${(x-h).toFixed(1)}" y="${(y-h).toFixed(1)}" width="${(2*h).toFixed(1)}" height="${(2*h).toFixed(1)}" fill="${fill}" stroke="${stk}" stroke-width="${(sw*k).toFixed(2)}"/>`;
+  if(L.vessel){const e=P(-58,22),a=P(-67.4,70);s+=`<path d="M${e[0]} ${e[1]} Q ${vx2-30} ${vy2-25} ${vx2} ${vy2} T ${a[0]} ${a[1]}" fill="none" stroke="#1673a6" stroke-width="${(1*k).toFixed(2)}" stroke-dasharray="${4*k} ${3*k}"/>`;
+    if(!zoom)s+=`<path d="M${vx2} ${vy2-5}L${vx2+4.5} ${vy2+3.5}H${vx2-4.5}Z" fill="#1673a6" stroke="#fff" stroke-width="1"/>`+T('mt',vx2,vy2,8,3,'Voyage vessel')+T('ms',vx2,vy2,8,11,'from Cape Town, indicative')}
+  if(L.route&&L.st&&zoom)s+=`<path d="M${bx} ${by} L ${tx} ${ty} L ${sx} ${sy}" fill="none" stroke="#c86a05" stroke-width="${(1*k).toFixed(2)}" stroke-dasharray="${3*k} ${2.5*k}"/>`;
+  if(L.st){
+    if(!zoom)s+=sq(mx,my,'#0e3a58','#fff',1)+T('mt',mx,my,7,3,'Maitri')+T('ms',mx,my,7,11,'70.77\u00b0S 11.73\u00b0E');
+    s+=sq(bx,by,'#0e3a58','#fff',1)+T('mt',bx,by,7,-1,'Bharati')+T('ms',bx,by,7,7,'69.41\u00b0S 76.19\u00b0E');
+    if(zoom){s+=sq(sx,sy,'#fff','#0e3a58',1.6)+T('mt',sx,sy,-8,-6,'Sandhi (planned)','end');
+      if(!o.incident)s+=`<circle cx="${tx}" cy="${ty}" r="${(3.6*k).toFixed(1)}" fill="#12805c" stroke="#fff" stroke-width="${k.toFixed(2)}"/>`+T('mt',tx,ty,0,14,'Team Bravo','middle')}
+  }
+  if(o.incident&&L.sar){const r=(zoom?11:9)*(zoom?k*1.6:1);s+=`<circle cx="${tx}" cy="${ty}" r="${r.toFixed(1)}" fill="#d92d20" fill-opacity=".12" stroke="#d92d20" stroke-width="${(.8*k).toFixed(2)}" stroke-dasharray="${3*k} ${2*k}"/><circle cx="${tx}" cy="${ty}" r="${(4*k).toFixed(1)}" fill="#d92d20" stroke="#fff" stroke-width="${(1.2*k).toFixed(2)}"/>`+T('mt',tx,ty,zoom?0:-9,zoom?14:3,'SAR-2026-08',zoom?'middle':'end','fill:#b42318')}
+  const km=zoom?100:200,u=km/MAP.km_per_unit,half=km/2/MAP.km_per_unit,ox=vx+10*k,oy=vy+vh-12*k;
+  s+=`<g><rect x="${ox}" y="${oy}" width="${half}" height="${3*k}" fill="#1b2a3a"/><rect x="${ox+half}" y="${oy}" width="${half}" height="${3*k}" fill="#fff" stroke="#1b2a3a" stroke-width="${(.4*k).toFixed(2)}"/>`+T('ms',ox,oy,0,-3,'0')+T('ms',ox+u,oy,0,-3,km+' km','middle')+`</g></svg>`;
+  return s;
+}
+function drawDashMap(){$('dashMap').innerHTML=realMap({incident:S.sarActive&&S.sarStep>=4})}
+function drawGIS(){
+  const L=S.layers,nm={grat:'Graticule',shelf:'Ice shelves',vessel:'Vessel track',st:'Stations',route:'Traverse route',sar:'SAR area'};
+  $('layerBar').innerHTML=`<button class="${S.view==='wide'?'on':''}" onclick="S.view='wide';drawGIS()">Indian sector</button><button class="${S.view==='zoom'?'on':''}" onclick="S.view='zoom';drawGIS()">Prydz Bay (zoom)</button><span style="width:10px"></span>`+Object.keys(nm).map(k=>`<button class="${L[k]?'on':''}" onclick="S.layers.${k}=!S.layers.${k};drawGIS()">${nm[k]}</button>`).join('');
+  $('gisMap').innerHTML=realMap({layers:L,zoom:S.view==='zoom',incident:S.sarActive&&S.sarStep>=4});
+  const rows=[['Bharati','69.41&deg;S 76.19&deg;E','Fixed'],['Maitri','70.77&deg;S 11.73&deg;E','Fixed'],['Sandhi','not confirmed','Planned'],['Team Bravo','71.0&deg;S 74.8&deg;E','Demo beacon'],['Vessel','63.2&deg;S 47.0&deg;E','Demo AIS']];
+  $('posBody').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="mute">${r[2]}</td></tr>`).join('');
+}
+/* local schematic for the SAR page (not to scale) */
+function sarLocal(step){
+  const cx=250,cy=150;let s=`<svg viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg">`;
+  for(let x=0;x<=520;x+=40)s+=`<line x1="${x}" y1="0" x2="${x}" y2="300" stroke="#dbe4ec" stroke-width=".7"/>`;
+  for(let y=0;y<=300;y+=40)s+=`<line x1="0" y1="${y}" x2="520" y2="${y}" stroke="#dbe4ec" stroke-width=".7"/>`;
+  s+=`<defs><pattern id="hh" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#e08a12" stroke-width="1.6" opacity=".6"/></pattern></defs>`;
+  s+=`<path d="M340 40C390 30 450 60 470 110C480 150 430 175 380 165C340 158 310 120 320 80Z" fill="url(#hh)" stroke="#e08a12" stroke-dasharray="4 3"/><text x="352" y="200" font-size="10" fill="#a85f08" font-weight="600" font-family="Inter,Arial">Crevasse field (surveyed)</text>`;
+  s+=`<path d="M20 250C50 235 90 240 110 255C120 270 80 285 45 280C25 276 10 265 20 250Z" fill="#c9d1d9" stroke="#9aa7b4"/><text x="26" y="296" font-size="9" fill="#66768a" font-family="Inter,Arial">Rock outcrop</text>`;
+  s+=`<path d="M10 210C80 200 130 170 200 158" fill="none" stroke="#1673a6" stroke-width="1.6" stroke-dasharray="6 4"/><text x="18" y="203" font-size="9.5" fill="#1673a6" font-family="Inter,Arial">Traverse track</text>`;
+  if(step>=6){const gx=cx-92,gy=cy-58,pr=[];let tot=0;for(let j=0;j<4;j++)for(let i=0;i<6;i++){const v=Math.exp(-((i-2.7)**2/3.6+(j-1.4)**2/2));pr.push(v);tot+=v}
+    pr.forEach((v,k)=>{const i=k%6,j=(k/6)|0,p=Math.round(v/tot*100);s+=`<rect x="${gx+i*31}" y="${gy+j*30}" width="31" height="30" fill="#d92d20" fill-opacity="${.05+v*.42}" stroke="#d92d20" stroke-opacity=".35" stroke-width=".7"/>${p>=6?`<text x="${gx+i*31+15.5}" y="${gy+j*30+18}" font-size="9" text-anchor="middle" fill="#7a1a12" font-family="Inter,Arial">${p}%</text>`:''}`});
+    s+=`<line x1="${cx+40}" y1="${cy-70}" x2="${cx-10}" y2="${cy-62}" stroke="#c86a05" stroke-width="1.6"/><path d="M${cx-10} ${cy-62}l7-3v6z" fill="#c86a05"/><text x="${cx+44}" y="${cy-68}" font-size="9.5" fill="#a85f08" font-family="Inter,Arial">wind 24 kt from 095&deg;, grid shifted downwind</text>`}
+  if(step>=3){s+=`<circle cx="${cx}" cy="${cy}" r="8" fill="#d92d20" stroke="#fff" stroke-width="2"/><text x="${cx+12}" y="${cy+4}" font-size="11" font-weight="600" fill="#b42318" font-family="Inter,Arial">Last beacon</text>`}
+  else s+=`<text x="30" y="110" font-size="11" fill="#93a0b0" font-family="Inter,Arial">Run the scenario to place the last beacon</text>`;
+  s+=`<rect x="14" y="14" width="76" height="4" fill="#1b2a3a"/><text x="14" y="30" font-size="9.5" fill="#1b2a3a" font-family="Inter,Arial">5 km</text><text x="506" y="292" font-size="9" text-anchor="end" fill="#93a0b0" font-family="Inter,Arial">Schematic, not to scale</text></svg>`;
+  return s;
+}
+
+/* ============ alerts ============ */
+function baseAlerts(){S.alerts=[
+ {l:'a',t:'Predictive Thermal Decay: SMP-ICE-43-01',time:'08:34',d:'Cryo container AST-CRYO-09 warming +0.8 C/hr. Predicted breach of the -15 C limit in about 8.3 h.',go:'cold',cta:'Open cold-chain'},
+ {l:'b',t:'Sync merged with headquarters',time:'08:41',d:'18 events (1.4 KB) merged over the Iridium SBD link.',go:'sync',cta:'View sync log'}]}
+function renderAlerts(){const a=S.alerts,crit=a.filter(x=>x.l==='r').length;
+  $('alertCount').textContent=a.length+' open';$('alertCount').className='chip '+(crit?'r':'a');
+  $('alertList').innerHTML=a.map(x=>`<div class="al ${x.l}"><div class="t"><span>${x.t}</span><span>${x.time}</span></div><p>${x.d}</p>${x.go?`<a onclick="go('${x.go}')">${x.cta} &rarr;</a>`:''}</div>`).join('')||'<div class="fine">No open alerts.</div>';
+  $('kpiAlert').textContent=String(crit).padStart(2,'0');$('kpiAlertNote').textContent=crit?'SAR case active':'No SAR case';$('kpiAlertCard').classList.toggle('red',crit>0);$('bellN').textContent=a.length}
+
+/* ============ network + sync ============ */
+function toggleNet(){S.online=!S.online;$('netBtn').className='b-sat'+(S.online?'':' off');$('netTxt').textContent=S.online?'SAT COMM (1KB)':'OFFLINE';
+  $('kpiLink').textContent=S.online?'Low bandwidth':'Offline';$('syncState').textContent=S.online?'Online':'Offline';
+  $('linkLine').className='link'+(S.online?'':' off');$('linkLbl').textContent=S.online?'Iridium link':'No link';
+  toast(S.online?'Link back. Press Sync now to send the queue.':'Link lost. Changes are saved on this device.',!S.online);refreshSync()}
+function addEvent(type,label,conf){S.queue.unshift({id:'EV-'+(1001+S.queue.length),type,label,t:nowT(),st:S.online?'s':'p',conf:!!conf});if(conf&&S.online)S.queue[0].st='p';refreshSync();toast(S.online?'Sent to HQ':'Saved on device, waiting to sync')}
+function refreshSync(){const p=S.queue.filter(q=>q.st==='p').length;$('syncBadge').style.display=p?'inline-block':'none';$('syncBadge').textContent=p;$('syncPend').textContent=p;
+  $('kpiLinkNote').textContent=S.online?(p?p+' waiting':'Synchronized'):p+' events queued';drawQueue()}
+function drawQueue(){const q=S.queue;$('qSub').textContent=q.length?q.filter(x=>x.st==='p').length+' pending / '+q.length+' total':'';
+  $('queue').innerHTML=q.slice(0,8).map(e=>`<div class="q ${e.st}"><div style="flex:1"><div>${e.label}</div><div class="m">${e.id} &middot; ${e.type} &middot; ${e.t}</div></div><span class="chip ${e.st==='s'?'g':e.st==='c'?'r':'a'}">${e.st==='s'?'SYNCED':e.st==='c'?'CONFLICT':'PENDING'}</span></div>`).join('')||'<div class="fine">Queue is empty. Go offline, then submit a check-in.</div>'}
+const fieldCheckin=()=>addEvent('CHECKIN','Check-in, Team Bravo, 71.00S 74.80E');
+const fieldHandoff=()=>addEvent('HANDOFF','CRG-0231 handed to traverse sledge train');
+const fieldStock=()=>addEvent('STOCK','Stock update: diesel -120 L');
+function fieldConflict(){addEvent('EDIT','Medical kits set to 13 (field tablet)',true);S.queue.unshift({id:'EV-HQ-77',type:'EDIT',label:'Medical kits set to 14 (HQ)',t:nowT(),st:'s'});refreshSync();toast('Same record edited in two places. Sync will flag it.',true)}
+function syncNow(){if(!S.online){toast('No link. Turn SAT COMM on first.',true);return}
+  const pend=S.queue.filter(q=>q.st==='p');if(!pend.length){toast('Nothing to sync');return}
+  pend.slice(0,5).forEach((_,i)=>{const p=document.createElement('div');p.className='pk';p.style.left='112px';$('viz').appendChild(p);setTimeout(()=>{p.style.transition='left 1s linear';p.style.left='calc(100% - 120px)'},60+i*220);setTimeout(()=>p.remove(),1350+i*220)});
+  setTimeout(()=>{let c=0;pend.forEach(e=>{if(e.conf){e.st='c';c++}else e.st='s'});refreshSync();
+    toast(c?(pend.length-c)+' events merged, '+c+' conflict kept for review':pend.length+' events merged into HQ',!!c);
+    S.alerts.unshift({l:'b',t:'Sync merged with headquarters',time:nowT(),d:pend.length+' queued events merged'+(c?', '+c+' conflict needs review.':'.'),go:'sync',cta:'View sync log'});renderAlerts()},1400+Math.min(5,pend.length)*220)}
+
+/* ============ missions ============ */
+const MISS=[
+ {id:'EXP-46-ISEA',n:'46th Indian Scientific Expedition to Antarctica',org:'Ice-core and atmospheric science / NCPOR, MoES',base:'Bharati Station',dest:'Sandhi summer-base traverse',team:4,risk:'MEDIUM',rc:'a',prog:62,st:'ACTIVE',dates:'Nov 2026 - Mar 2027',obj:'Deep ice-core drilling and an automated weather buoy deployment.',people:['Team lead (glaciologist)','Field engineer','Logistics officer','Medical officer'],assets:['AST-SNOW-01','AST-SNOW-02','AST-UAV-04'],permit:'Valid until 2027-04-15'},
+ {id:'EXP-MAITRI',n:'Maitri resupply and winter changeover',org:'Logistics / NCPOR, MoES',base:'Maitri Station',dest:'Cape Town to Maitri, air and ship legs',team:3,risk:'HIGH',rc:'r',prog:44,st:'ACTIVE',dates:'Nov 2026 - Feb 2027',obj:'Move fuel, food and spares through the Cape Town hub inside the weather window.',people:['Logistics lead','Flight coordinator','Station doctor'],assets:['AST-SNOW-11','AST-SLED-05'],permit:'Valid until 2027-03-01'},
+ {id:'EXP-HIMADRI',n:'Himadri Arctic summer campaign',org:'Arctic research / NCPOR, MoES',base:'Himadri Station, Ny-Alesund',dest:'Kongsfjorden field sites',team:2,risk:'LOW',rc:'g',prog:15,st:'PLANNED',dates:'Jun 2027 - Aug 2027',obj:'Fjord sampling and atmospheric sensor servicing.',people:['Campaign lead','Field scientist'],assets:['AST-BOAT-02'],permit:'Pending review'},
+ {id:'EXP-HIMANSH',n:'Himansh glacier monitoring',org:'Cryosphere / NCPOR, MoES',base:'Himansh Station, Spiti',dest:'Glacier monitoring transect',team:2,risk:'MEDIUM',rc:'a',prog:78,st:'ACTIVE',dates:'Aug 2026 - Oct 2026',obj:'Seasonal mass-balance readings and stake replacement.',people:['Glaciologist','Field assistant'],assets:['AST-UAV-07','AST-SNOW-21'],permit:'Valid until 2026-12-10'}];
+function drawMissions(){
+  $('missionList').innerHTML=MISS.map((m,i)=>`<div class="ms-item ${i===S.sel?'sel':''}" onclick="S.sel=${i};drawMissions()"><div class="t"><span class="ms-id">${m.id}</span><h4>${m.n}</h4><span style="flex:1"></span><span class="chip ${m.st==='ACTIVE'?'g':'b'}">${m.st}</span></div><div class="fine">${m.org}</div>
+   <div class="meta"><div><small>Base station</small>${m.base}</div><div><small>Destination</small>${m.dest}</div><div><small>Field team</small>${m.team} scientists / ops</div><div><small>Risk rating</small><b style="color:var(--${m.rc==='r'?'red':m.rc==='a'?'amber':'green'})">${m.risk}</b></div></div>
+   <div class="row fine"><span>Traverse progression</span><b>${m.prog}%</b></div><div class="bar"><i style="width:${m.prog}%"></i></div></div>`).join('');
+  const m=MISS[S.sel];
+  $('dossier').innerHTML=`<div class="fine mono">${m.id} DOSSIER</div><h3 style="font-size:16px;margin:3px 0">${m.n}</h3><div class="fine">${m.dates}</div>
+   <div class="fine" style="margin:12px 0 4px;font-weight:600;color:var(--text)">Mission objective</div><div class="note">${m.obj}</div>
+   <div class="row" style="margin-top:8px"><span class="mute">Permit</span><span class="chip ${m.permit.startsWith('Valid')?'g':'a'}">${m.permit}</span></div>
+   <div class="fine" style="margin:10px 0 4px;font-weight:600;color:var(--text)">Assigned team (${m.people.length})</div>${m.people.map(p=>`<div class="row"><span>${p}</span><span class="chip g">ACTIVE</span></div>`).join('')}
+   <div class="fine" style="margin:10px 0 4px;font-weight:600;color:var(--text)">Allocated assets</div><div>${m.assets.map(a=>`<span class="ms-id" style="margin-right:4px">${a}</span>`).join('')}</div>
+   <div class="fine" style="margin:12px 0 4px;font-weight:600;color:var(--text)">Status</div>
+   <div class="gr g2" style="gap:6px"><button class="btn s" onclick="toast('Set ACTIVE, logged')">Set ACTIVE</button><button class="btn w s" onclick="toast('Set PAUSED, logged')">Set PAUSED</button><button class="btn w s" onclick="toast('Set COMPLETED, logged')">Set COMPLETED</button><button class="btn w s" onclick="toast('Set CANCELLED, logged')">Set CANCELLED</button></div>
+   <button class="btn w full" style="margin-top:8px" onclick="go('risk')">Inspect route risk</button><button class="btn w full" style="margin-top:6px" onclick="go('gis')">View on GIS map</button>`}
+
+/* ============ assets / people ============ */
+const ASSETS=[
+ {id:'AST-SNOW-01',name:'Snowcat, tracked',type:'Snowcat',loc:'Bharati',status:'In use',lvl:64,seen:'08:40'},
+ {id:'AST-SNOW-02',name:'Snowcat, tracked',type:'Snowcat',loc:'Bharati',status:'Available',lvl:88,seen:'07:15'},
+ {id:'AST-UAV-04',name:'Fixed-wing survey UAV',type:'UAV',loc:'Bharati',status:'Available',lvl:71,seen:'08:02'},
+ {id:'AST-SLED-05',name:'Traverse sledge train',type:'Sledge',loc:'Traverse',status:'In use',lvl:0,seen:'08:44'},
+ {id:'AST-GEN-02',name:'Generator 150 kVA',type:'Generator',loc:'Bharati',status:'Running',lvl:57,seen:'08:50'},
+ {id:'AST-CRYO-09',name:'Cryo container',type:'Cold storage',loc:'Traverse',status:'In use',lvl:82,seen:'08:44'}];
+function drawAssets(){$('assetBody').innerHTML=ASSETS.map((a,i)=>`<tr><td class="mono">${a.id}</td><td>${a.name}</td><td>${a.type}</td><td>${a.loc}</td><td><span class="chip ${a.status==='Retired'?'':a.status==='Maintenance'?'a':'g'}">${a.status.toUpperCase()}</span></td><td class="r mono">${a.lvl?a.lvl+'%':'-'}</td><td class="mono mute">${a.seen}</td><td class="r"><button class="btn w s" onclick="retireAsset(${i})">${a.status==='Retired'?'Restore':'Retire'}</button></td></tr>`).join('')}
+function addAsset(){const n=$('aName').value.trim();if(!n){toast('Enter an asset name',true);return}const t=$('aType').value,c=t.slice(0,4).toUpperCase();
+  const id='AST-'+c+'-'+String(ASSETS.length+10).padStart(2,'0');ASSETS.unshift({id,name:n,type:t,loc:$('aSt').value,status:'Available',lvl:100,seen:nowT()});$('aName').value='';drawAssets();addEvent('ASSET','Asset added: '+id)}
+function retireAsset(i){const a=ASSETS[i];a.status=a.status==='Retired'?'Available':'Retired';drawAssets();addEvent('ASSET',a.id+' set to '+a.status)}
+const PEOPLE=[
+ {n:'Dr. A. Roy',role:'Glaciologist',team:'Alpha',loc:'Bharati',last:'08:52',next:'11:52',s:'ok'},
+ {n:'R. Verma',role:'Field engineer',team:'Alpha',loc:'Bharati',last:'08:10',next:'11:10',s:'ok'},
+ {n:'S. Bhatt',role:'Team lead',team:'Bravo',loc:'Traverse',last:'06:10',next:'09:10',s:'due'},
+ {n:'K. Menon',role:'Medical officer',team:'Bravo',loc:'Traverse',last:'06:10',next:'09:10',s:'due'},
+ {n:'T. Dorjee',role:'Mountaineer',team:'Bravo',loc:'Traverse',last:'06:10',next:'09:10',s:'due'},
+ {n:'P. Iyer',role:'Logistics officer',team:'Base',loc:'Bharati',last:'08:30',next:'12:30',s:'ok'},
+ {n:'M. Nair',role:'Met observer',team:'Base',loc:'Bharati',last:'07:45',next:'11:45',s:'ok'},
+ {n:'L. Fernandes',role:'Mechanic',team:'Base',loc:'Bharati',last:'08:05',next:'12:05',s:'ok'}];
+function drawPeople(){$('peopleBody').innerHTML=PEOPLE.map((p,i)=>{const c=p.s==='ok'?['g','ON SCHEDULE']:p.s==='due'?['a','DUE SOON']:['r','MISSED'];
+  return `<tr><td>${p.n}</td><td class="mute">${p.role}</td><td>${p.team}</td><td>${p.loc}</td><td class="mono">${p.last}</td><td class="mono">${p.next}</td><td><span class="chip ${c[0]}">${c[1]}</span></td><td class="r"><button class="btn w s" onclick="checkin(${i})">Check in</button></td></tr>`}).join('')}
+function checkin(i){const p=PEOPLE[i];p.last=nowT();p.next=String((new Date().getUTCHours()+3)%24).padStart(2,'0')+':'+nowT().slice(3);p.s='ok';drawPeople();addEvent('CHECKIN','Check-in: '+p.n+' ('+p.team+')')}
+
+/* ============ cargo chain ============ */
+const CHAIN=[['NCPOR Goa','Packed, sealed'],['Cape Town hub','Customs cleared'],['Maitri (Novo)','Air or ship leg'],['Zenit airfield','Basler / Twin Otter'],['Bharati','Delivered']];
+function drawChain(){$('chain').innerHTML=`<div class="chain">${CHAIN.map((c,i)=>`<div class="${i<S.chain?'d':i===S.chain?'c':''}"><div class="n">${i<S.chain?'&#10003;':i+1}</div><b>${c[0]}</b><small>${i===S.chain?'In progress':c[1]}</small></div>`).join('')}</div>`;$('chainBar').style.width=(S.chain/4*100)+'%'}
+function cargoHandoff(){if(S.chain<4){S.chain++;drawChain();addEvent('HANDOFF','CRG-0231 handed over at '+CHAIN[S.chain][0])}else toast('Already delivered. History is kept.')}
+
+/* ============ inventory ============ */
+function drawInv(){$('invBody').innerHTML=S.inv.map(i=>{const d=i.u>0?i.q/i.u:99,low=i.q<i.min,w=!low&&i.q<i.min*1.3;return `<tr><td>${i.n}</td><td class="r mono">${Math.round(i.q)} ${i.unit}</td><td class="r mono">${i.u}</td><td class="r mono" style="color:var(--${low?'red':w?'amber':'green'})">${d>90?'90+':d.toFixed(1)}</td><td><span class="chip ${low?'r':w?'a':'g'}">${low?'BELOW MIN':w?'WATCH':'OK'}</span></td></tr>`}).join('');
+  $('invChart').innerHTML=S.inv.map(i=>{const d=i.u>0?Math.min(i.q/i.u,30):30,low=i.q<i.min;return `<div class="row"><span class="mute">${i.n}</span><b class="mono">${d>=30?'30+':d.toFixed(1)} d</b></div><div class="bar"><i style="width:${d/30*100}%;background:var(--${low?'red':d<7?'amber':'blue'})"></i></div>`}).join('')}
+function invShortage(){S.inv[1].q=520;drawInv();S.alerts.unshift({l:'a',t:'Diesel below minimum stock',time:nowT(),d:'Traverse diesel is 520 L, minimum 800 L. About 2.7 days at the current burn rate.',go:'inv',cta:'Open inventory'});renderAlerts();
+  $('s2').style.width='27%';$('s2').style.background='var(--red)';$('s2t').textContent='2.7 days';$('survTag').textContent='FAILED';$('survTag').className='chip r';toast('Alert raised: diesel below minimum',true)}
+function invReset(){S.inv=JSON.parse(JSON.stringify(INV0));drawInv();baseAlerts();renderAlerts();$('s2').style.width='65%';$('s2').style.background='var(--green)';$('s2t').textContent='6.5 days';$('survTag').textContent='PASSED';$('survTag').className='chip g'}
+
+/* ============ route risk ============ */
+function calcRisk(){
+  const ice=+$('rIce').value/100,wind=Math.min(+$('rWind').value/50,1),vis=1-Math.min(+$('rVis').value/15,1),dist=Math.min(+$('rDist').value/600,1),age=Math.min(+$('rAge').value/72,1);
+  $('rIceV').textContent=$('rIce').value+' %';$('rWindV').textContent=$('rWind').value+' kt';$('rVisV').textContent=$('rVis').value+' km';$('rDistV').textContent=$('rDist').value+' km';$('rAgeV').textContent=$('rAge').value+' h';
+  const parts=[['Sea ice',ice,.35],['Wind',wind,.25],['Visibility',vis,.15],['Distance',dist,.10],['Data age',age,.15]];
+  const sc=parts.reduce((a,p)=>a+p[1]*p[2],0),bd=sc<.33?['LOW','g','green']:sc<.66?['MODERATE','a','amber']:['HIGH','r','red'];
+  $('rScore').textContent=sc.toFixed(2);$('rScore').style.color='var(--'+bd[2]+')';$('rBand').textContent=bd[0];$('rBand').className='chip '+bd[1];
+  $('rParts').innerHTML=parts.map(p=>`<div class="rr" style="grid-template-columns:90px 1fr 84px;margin:5px 0"><span>${p[0]}</span><div class="bar" style="margin:0"><i style="width:${p[1]*100}%;background:var(--${p[1]>.66?'red':p[1]>.33?'amber':'green'})"></i></div><b>${p[1].toFixed(2)} x ${p[2]}</b></div>`).join('');
+  const top=[...parts].sort((a,b)=>b[1]*b[2]-a[1]*a[2])[0];
+  $('rWhy').innerHTML=`<b style="color:var(--text)">Why:</b> ${top[0]} adds the most (${(top[1]*top[2]).toFixed(2)} of ${sc.toFixed(2)}). Data is ${$('rAge').value} h old${age>.5?', so treat this with caution.':'.'}`;
+  const d=+$('rDist').value;$('rAlt').innerHTML=`<div class="note"><b style="color:var(--text)">Route A, direct</b><br>${sc.toFixed(2)} score, ${d} km</div><div class="note" style="border-color:#a9c9dd"><b style="color:var(--text)">Route B, via WP-4</b><br>${Math.max(0,sc-.12).toFixed(2)} score, ${Math.round(d*1.18)} km<br>Longer, avoids crevasse field</div>`}
+
+/* ============ cold chain ============ */
+function lineChart(series,o={}){
+  const W=440,H=190,p=30,all=series.flatMap(s=>s.d),mn=o.min??Math.min(...all)-1,mx=o.max??Math.max(...all)+1;
+  const X=(i,n)=>p+i*(W-p*2)/(n-1),Y=v=>H-p-(v-mn)/(mx-mn)*(H-p*2);let g=`<svg viewBox="0 0 ${W} ${H}" style="width:100%">`;
+  for(let i=0;i<5;i++){const y=p+i*(H-p*2)/4;g+=`<line x1="${p}" x2="${W-p}" y1="${y}" y2="${y}" stroke="#e6ebf1"/><text x="3" y="${y+3}" font-size="9" fill="#93a0b0" font-family="Consolas,monospace">${(mx-(mx-mn)*i/4).toFixed(0)}</text>`}
+  if(o.split!==undefined){const x=X(o.split,series[0].d.length);g+=`<rect x="${x}" y="${p}" width="${W-p-x}" height="${H-p*2}" fill="#c86a05" opacity=".06"/><text x="${x+5}" y="${p+11}" font-size="9.5" fill="#a85f08">forecast</text><text x="${x-46}" y="${p+11}" font-size="9.5" fill="#66768a">measured</text>`}
+  if(o.limit!==undefined){const y=Y(o.limit);g+=`<line x1="${p}" x2="${W-p}" y1="${y}" y2="${y}" stroke="#d92d20" stroke-dasharray="5 4"/><text x="${W-p-88}" y="${y-5}" font-size="9.5" fill="#b42318">safe limit ${o.limit} C</text>`}
+  series.forEach(s=>{g+=`<polyline points="${s.d.map((v,i)=>X(i,s.d.length)+','+Y(v)).join(' ')}" fill="none" stroke="${s.c}" stroke-width="${s.w||2}"/>`;(s.flag||[]).forEach(i=>g+=`<circle cx="${X(i,s.d.length)}" cy="${Y(s.d[i])}" r="4.5" fill="#d92d20" stroke="#fff" stroke-width="1.5"/>`)});return g+'</svg>'}
+function drawCold(){const rate=.8+S.coldDelay*.08,now=-21.6+S.coldDelay*.8,hist=[-23.4,-23.1,-22.7,-22.4,-22.0].map(v=>v+S.coldDelay*.13);hist.push(now);
+  const pr=[];for(let i=1;i<=10;i++)pr.push(now+rate*i),eta=(-15-now)/rate;var eta=(-15-now)/rate;
+  $('coldChart').innerHTML=lineChart([{d:[...hist,...pr],c:'#1673a6',w:2.2}],{limit:-15,min:-26,max:-8,split:5});
+  $('cNow').textContent=now.toFixed(1)+' C';$('cRate').textContent='+'+rate.toFixed(2)+' C/h';$('cETA').textContent=eta.toFixed(1)+' h';$('cETA').style.color=eta<4?'var(--red)':'var(--amber)';
+  $('telChart').innerHTML=lineChart([{d:[-28.1,-28.3,-28.0,-28.4,-12.0,-28.2,-28.5,-28.3,-28.6,-28.4],c:'#93a0b0',w:1.4,flag:[4]},{d:[-28.1,-28.2,-28.15,-28.25,-28.28,-28.26,-28.3,-28.3,-28.36,-28.37],c:'#1673a6',w:2.2}],{min:-32,max:-8})}
+function coldDelay(){S.coldDelay=4;drawCold();S.alerts.unshift({l:'r',t:'Cold-chain: breach in under 4 h',time:nowT(),d:'The delay pushes SMP-ICE-43-01 toward its limit. Move it to the powered freezer at WP-4.',go:'cold',cta:'Open cold-chain'});renderAlerts();toast('Warning raised before the limit is crossed',true)}
+function coldReset(){S.coldDelay=0;drawCold();baseAlerts();renderAlerts()}
+
+/* ============ SAR ============ */
+const SAR=[['Check-in timer running','Team Bravo, interval 180 min'],['Timer expired','No confirmation for 35 min, warning created'],['Other evidence checked','No later beacon or radio contact'],['Incident SAR-2026-08 created','Severity high, last beacon 71.00S 74.80E'],['Weather and risk attached','Wind 24 kt from 095, visibility 4.5 km, crevasse field close'],['Nearest resources listed','AST-SNOW-02 (11 km), AST-UAV-04 (6 km)'],['Search grid generated','24 cells, shifted for wind drift, weighted by probability'],['Response dispatched','UAV sweep started, rescue team notified, actions logged']];
+let sarTimer=null;
+function drawSAR(){$('sarTL').innerHTML=SAR.map((s,i)=>{const c=!S.sarActive?'':i<S.sarStep?'d':i===S.sarStep?'c':'';return `<div class="${c}"><b>${s[0]}</b>${s[1]}${c?`<br><small>${nowT()} UTC</small>`:''}</div>`}).join('');
+  $('sarState').textContent=S.sarActive?(S.sarStep>=8?'RESPONSE ACTIVE':'INCIDENT OPEN'):'STANDBY';$('sarState').className='chip '+(S.sarActive?'r':'');
+  $('sarBeacon').textContent=S.sarStep>=4?'71.00S 74.80E':'-';$('sarCells').textContent=S.sarStep>=7?'24 cells':'-';$('sarInfo').textContent=S.sarStep>=4?'SAR-2026-08, Team Bravo':'Waiting for scenario';
+  $('sarMap').innerHTML=sarLocal(S.sarActive?S.sarStep:0);drawDashMap()}
+function runSAR(){resetSAR(true);S.sarActive=true;S.sarStep=0;
+  $('sarBtn').className='b-sar';$('sarBtn').textContent='SAR ALERT';$('sarBadge').style.display='inline-block';drawSAR();
+  sarTimer=setInterval(()=>{S.sarStep++;
+    if(S.sarStep===2){S.alerts.unshift({l:'a',t:'Missed scheduled check-in: Team Bravo',time:nowT(),d:'Exceeded the 180 min interval by 35 min. Checking beacon and radio.',go:'sar',cta:'Open SAR hub'});renderAlerts();$('kpiMissed').textContent='1 missed check-in';$('kpiMissed').style.color='var(--red)';PEOPLE.filter(p=>p.team==='Bravo').forEach(p=>p.s='miss')}
+    if(S.sarStep===4){S.alerts.unshift({l:'r',t:'SAR-2026-08: track discontinued',time:nowT(),d:'Team Bravo not responding. Last position at the edge of a crevasse field.',go:'sar',cta:'Inspect'});renderAlerts();toast('Incident SAR-2026-08 created',true)}
+    if(S.sarStep>=8){clearInterval(sarTimer);toast('Response dispatched, actions logged')}
+    drawSAR()},1300)}
+function resetSAR(silent){clearInterval(sarTimer);S.sarActive=false;S.sarStep=0;PEOPLE.forEach(p=>{if(p.s==='miss')p.s='due'});
+  $('sarBtn').className='b-sar idle';$('sarBtn').textContent='No active incident';$('sarBadge').style.display='none';$('kpiMissed').textContent='1 check-in due soon';$('kpiMissed').style.color='var(--amber)';drawSAR();if(!silent){baseAlerts();renderAlerts()}}
+
+/* ============ AI assistant ============ */
+const QA=[
+ ['Why is the cold-chain alert open?',()=>({a:'Container AST-CRYO-09 is warming at about +0.8 C per hour because the ambient temperature on the traverse is -12 C. The sample is at -21.6 C and its safe limit is -15 C, so the predicted breach is in about 8.3 h. Suggested action: move it to the powered freezer at WP-4 before the next leg.',s:'sources: cold_chain.AST-CRYO-09, telemetry (last 6 h), traverse_plan.EXP-46-ISEA'})],
+ ['Which stock runs out first?',()=>{const m=S.inv.filter(i=>i.u>0).sort((a,b)=>a.q/a.u-b.q/b.u)[0];return{a:`${m.n} is closest: ${Math.round(m.q)} ${m.unit} left at ${m.u} per day, about ${(m.q/m.u).toFixed(1)} days. Its minimum is ${m.min} ${m.unit}${m.q<m.min?', so it is already below minimum.':'.'}`,s:'sources: inventory table, 7-day average use'}}],
+ ['Can this battery go by air?',()=>({a:'No. Lithium-ion batteries count as hazardous cargo. The NCPOR expedition advertisements say hazardous cargo cannot go by air and has to be arranged at Cape Town or shipped. Small flights also carry only 1,500 to 1,800 kg in total.',s:'sources: NCPOR ISEA advertisement, cargo rules table'})],
+ ['Summarise Team Bravo',()=>({a:S.sarActive?`Team Bravo missed a scheduled check-in. Incident SAR-2026-08 is open with the last beacon at 71.00S 74.80E, at the edge of a crevasse field. Wind is 24 kt from 095. A 24-cell search grid exists${S.sarStep>=8?' and the UAV sweep has started.':'.'}`:'Team Bravo (3 people) is on the traverse. Next check-in is due soon and no incident is open.',s:'sources: check-ins, incidents, weather'})]];
+function drawChat(){$('chat').innerHTML='<div class="msg a">I answer only from operational records and list what I used. Pick a question below.</div>';$('sugg').innerHTML=QA.map((q,i)=>`<button onclick="ask(${i})">${q[0]}</button>`).join('')}
+function ask(i){const c=$('chat');c.insertAdjacentHTML('beforeend',`<div class="msg u">${QA[i][0]}</div>`);c.scrollTop=c.scrollHeight;setTimeout(()=>{const r=QA[i][1]();c.insertAdjacentHTML('beforeend',`<div class="msg a">${r.a}<div class="src">${r.s}</div></div>`);c.scrollTop=c.scrollHeight},400)}
+
+/* ============ demo steps ============ */
+const DEMO=[['Show the dashboard',()=>go('dash')],['Switch SAT COMM off',()=>{go('sync');if(S.online)toggleNet()}],['Submit a check-in and a cargo handoff offline',()=>{fieldCheckin();fieldHandoff()}],['Link back on, sync the queue',()=>{if(!S.online)toggleNet();setTimeout(syncNow,300)}],['Run the missed check-in scenario',()=>{go('sar');runSAR()}],['Open Route Risk and move a slider',()=>go('risk')],['Cold-chain: simulate the delay',()=>{go('cold');coldDelay()}],['Ask the assistant a question',()=>{go('ai');ask(0)}]];
+let di=0;
+function drawDemo(){$('demoSteps').innerHTML=DEMO.map((d,i)=>`<div class="ds ${i<di?'d':i===di?'c':''}"><i>${i<di?'&#10003;':i+1}</i><span>${d[0]}</span></div>`).join('')}
+function demoNext(){if(di>=DEMO.length){toast('Demo finished');return}DEMO[di][1]();di++;drawDemo()}
+function demoReset(){di=0;drawDemo();resetSAR();coldReset();invReset();S.queue=[];S.chain=2;if(!S.online)toggleNet();refreshSync();go('dash')}
+
+/* ============ init ============ */
+baseAlerts();renderAlerts();drawDashMap();drawSAR();drawChat();drawDemo();drawMissions();refreshSync();
+</script>
+</body>
+</html>
