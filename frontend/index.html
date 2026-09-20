@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARGUS: Agentic fraud investigation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div id="cur-dot"><i></i></div><div id="cur-ring"><span></span></div>
+
+<section id="landing" aria-label="ARGUS introduction">
+  <canvas id="lcv"></canvas>
+  <div class="ltip" id="ltip"></div>
+  <div class="lc">
+    <div class="wm">ARGUS</div>
+    <h1>Agentic fraud investigation and decision intelligence</h1>
+    <p>From uncertain signals to defensible action.</p>
+    <button class="btn primary lg mag" id="enter">Enter investigation center <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="hint">Hover a node to see what it is connected to.</div>
+  </div>
+</section>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="wmk"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#3F4FD1" stroke-width="2"/><circle cx="13" cy="13" r="4" fill="#0F9C96"/><path d="M13 2v5M13 19v5M2 13h5M19 13h5" stroke="#3F4FD1" stroke-width="2" stroke-linecap="round"/></svg>ARGUS <small>Investigation Center</small></div>
+    <nav id="nav" aria-label="Main">
+      <button data-v="center">Command center</button>
+      <button data-v="case">Investigation</button>
+      <button data-v="memory">Case memory</button>
+      <button data-v="policy">Policy</button>
+      <button data-v="bench">Benchmark</button>
+      <button data-v="report">Report</button>
+    </nav>
+    <div class="sys"><span class="dotg"></span><span class="txt">System operational</span>
+      <button class="bell" id="bell" aria-label="Approvals waiting"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2a4 4 0 0 0-4 4v2.5L2.8 11h10.4L12 8.5V6a4 4 0 0 0-4-4zM6.5 13a1.5 1.5 0 0 0 3 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><i id="bellN">0</i></button>
+      <button class="avatar" id="avatar" aria-label="Account">AN</button></div>
+  </header>
+  <main>
+    <section class="view" id="v-center"></section>
+    <section class="view" id="v-case">
+      <div class="card chead" id="chead">
+        <div class="t"><small>Fraud investigation</small><h2 id="hId"></h2></div>
+        <div class="hm"><small>Risk</small><b id="hRisk" data-v="0">0</b></div>
+        <div class="hm"><small>Confidence</small><b id="hConf" data-v="0">0%</b></div>
+        <div class="hm"><small>Uncertainty</small><b id="hUnc">High</b></div>
+        <div class="hm"><small>Status</small><span class="chip" id="hStat"></span></div>
+        <button class="btn sm" id="hRep">View case report</button>
+      </div>
+      <div class="ws">
+        <aside class="colL">
+          <div class="card sec"><h3>Case timeline</h3><ul class="tl" id="tl"></ul></div>
+          <div class="card sec"><details open><summary>Agent activity</summary><ul class="act" id="act"></ul></details></div>
+        </aside>
+        <div class="card gcard" id="gcard">
+          <canvas id="gcv" aria-label="Relationship graph of the case"></canvas>
+          <div class="legend" id="legend"></div>
+          <div class="gnote" id="gnote"></div>
+          <div class="ncard" id="ncard"></div>
+          <div class="gtool">
+            <div class="dp"><b><span>Relationship depth</span><span id="dpv">1</span></b><input type="range" id="dp" min="1" max="4" step="1" value="1" aria-label="Relationship depth"><div class="ticks"><span>1</span><span>2</span><span>3</span><span>4</span></div></div>
+            <div class="zb"><button id="zi" aria-label="Zoom in">+</button><button id="zo" aria-label="Zoom out">−</button><button id="zr" aria-label="Reset view" style="width:auto;padding:0 10px;font-size:12px">Reset</button></div>
+          </div>
+        </div>
+        <aside class="colR">
+          <div class="card agent">
+            <div class="ag-h"><b>Investigation agent</b><span class="live" id="live">Working</span></div>
+            <div class="ag-b"><small>Current objective</small><div>Determine whether the available evidence supports intervention.</div></div>
+            <div class="ag-b"><small>Current assessment</small>
+              <div class="assess">
+                <div class="radial"><svg viewBox="0 0 118 118"><circle class="bg" cx="59" cy="59" r="52"/><circle class="fg" id="rfg" cx="59" cy="59" r="52"/></svg><div><b id="rconf" data-v="0">0%</b><small>Confidence</small></div></div>
+                <div><div class="kv"><small>Risk</small><b id="aRisk" data-v="0">0</b></div><div class="kv"><small>Uncertainty</small><b id="aUnc" data-v="100">100%</b></div><div class="kv"><small>Recommendation</small></div><div id="aRec" style="font-weight:600;font-size:13px;margin-top:-2px">Gathering signals</div></div>
+              </div>
+              <div class="ubar"><div class="lb"><span>Low uncertainty</span><span>High</span></div><div class="tr"><i id="uMark" style="left:100%"></i></div></div>
+            </div>
+            <div class="ag-b"><small>Findings</small><ul class="flist" id="fnd"></ul></div>
+            <div id="gapWrap"></div>
+            <div class="slot" id="slot"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="card dock" id="dock">
+        <div class="dock-h" id="dtabs" role="tablist">
+          <button data-t="ev" class="on">Evidence</button><button data-t="fi">Findings</button><button data-t="pc">Prior cases</button><button data-t="po">Policy</button><button data-t="de">Decision</button>
+          <button class="btn sm ghost tg" id="dtg">Collapse</button>
+        </div>
+        <div class="dock-b" id="dbody"></div>
+      </div>
+    </section>
+    <section class="view" id="v-memory"></section>
+    <section class="view" id="v-policy"></section>
+    <section class="view" id="v-bench"></section>
+    <section class="view" id="v-report"></section>
+  </main>
+</div>
+<div id="modal"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

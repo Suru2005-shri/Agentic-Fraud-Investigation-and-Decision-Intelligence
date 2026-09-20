@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirm a payment</title>
+<style>
+:root{--ink:#1D2230;--slate:#667085;--indigo:#3F4FD1;--red:#D9463F;--line:#E5E3DC}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;font-family:'Instrument Sans','Segoe UI',system-ui,sans-serif;color:var(--ink);background:radial-gradient(700px 400px at 90% 0,#E8ECFB,transparent 60%),#F6F5F1}
+.card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 20px 50px -20px rgba(29,34,48,.35);text-align:center}
+small{color:var(--slate)}h1{font-size:22px;margin:8px 0}
+.amt{font-size:44px;font-weight:700;letter-spacing:-.04em;margin:10px 0 4px}
+dl{display:grid;grid-template-columns:auto auto;justify-content:center;gap:4px 18px;text-align:left;margin:12px 0 20px}dt{color:var(--slate)}dd{margin:0;font-weight:600}
+button{display:block;width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);font:600 15px inherit;cursor:pointer;margin-top:10px;background:#fff}
+button.p{background:var(--indigo);color:#fff;border-color:var(--indigo)}button.d{background:var(--red);color:#fff;border-color:var(--red)}
+.brand{font-weight:700;color:#22307F;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="card" id="c"><div class="brand">ARGUS</div><small>Loading...</small></div>
+<script>
+const q=new URLSearchParams(location.search),r=q.get('r'),t=q.get('t'),c=document.getElementById('c');
+const money=n=>'\u20B9'+Math.round(n).toLocaleString('en-IN');
+function msg(title,text){c.innerHTML=`<div class="brand">ARGUS</div><h1>${title}</h1><p style="color:#667085">${text}</p>`}
+async function answer(ok){
+  c.querySelectorAll('button').forEach(b=>b.disabled=true);
+  const res=await fetch(`/api/evidence-requests/${r}/respond`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({authorized:ok,token:t})});
+  if(res.ok)msg('Thank you','Your answer has been sent to the fraud team.');
+  else{const j=await res.json().catch(()=>({}));msg('Something went wrong',j.detail||'Please try again.')}
+}
+(async()=>{
+  if(!r||!t)return msg('Link not valid','Please use the link you were sent.');
+  const res=await fetch(`/api/evidence-requests/${r}/public?t=${encodeURIComponent(t)}`);
+  if(!res.ok)return msg('Link not valid','This link is invalid or has expired.');
+  const d=await res.json();
+  if(d.status!=='pending')return msg('Already answered','This request has already been answered. Thank you.');
+  const when=new Date(d.when).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(d.type==='step_up'){
+    c.innerHTML=`<div class="brand">ARGUS</div><small>Step-up authentication</small><h1>Verify your identity</h1><p style="color:#667085">We noticed unusual activity on your account. Confirm it is you.</p><button class="p" id="y">Yes, it is me</button><button id="n">No, this is not me</button>`;
+  }else{
+    c.innerHTML=`<div class="brand">ARGUS</div><small>Transaction validation</small><h1>Did you authorize this transaction?</h1><div class="amt">${money(d.amount)}</div><dl><dt>Merchant</dt><dd>${d.merchant}</dd><dt>Date</dt><dd>${when}</dd></dl><button class="p" id="y">Yes, I authorized it</button><button class="d" id="n">No, I did not</button>`;
+  }
+  document.getElementById('y').onclick=()=>answer(true);document.getElementById('n').onclick=()=>answer(false);
+})();
+</script>
+</body>
+</html>
