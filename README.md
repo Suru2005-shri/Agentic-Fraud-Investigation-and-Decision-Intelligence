@@ -345,7 +345,7 @@ The screenshots cover areas including:
 
 ### 01_image-1790317873980
 
-![01_image-1790317873980](docs/screenshots/tigergraph_savanna/01_image-1790317873980.jpg)
+![01_image-1790317873980](docs/tigergraph_savanna/01_image-1790317873980.jpg)
 
 ### 02_1000009522
 
