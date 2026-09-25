@@ -6,7 +6,7 @@ const FINE=matchMedia('(pointer:fine)').matches;
 const sleep=ms=>new Promise(r=>setTimeout(r,RM?Math.min(ms,50):ms));
 const frame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const el=h=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstElementChild};
-const money=n=>'\u20B9'+n.toLocaleString('en-IN');
+const money=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pad2=n=>n<100?String(n).padStart(2,'0'):n.toLocaleString('en-IN');
 function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
 const band=r=>r>=80?'high':r>=55?'med':'low';
@@ -24,9 +24,9 @@ function animNum(node,to,fmt=v=>String(v),dur=900){
 
 /* ================= api and case store ================= */
 let TOKEN=localStorage.getItem('argus_token')||'',USER=null,LIST=[],STATS=null,PENDING=null;
-const HERO_ID='FR-20481';
+const HERO_ID='HHG-001';
 const GC={customer:'#3F4FD1',account:'#22307F',tx:'#B87A08',device:'#0F9C96',ip:'#667085',merchant:'#4C7FB8',case:'#D9463F'};
-const GL={customer:'Customer',account:'Account',tx:'Transaction',device:'Device',ip:'IP address',merchant:'Merchant',case:'Case'};
+const GL={customer:'Customer',account:'Card',tx:'Transaction',device:'Device',ip:'IP address',merchant:'Product',case:'Case'};
 async function api(path,opts={}){
   const r=await fetch('/api'+path,{method:opts.method||'GET',headers:{'Content-Type':'application/json',...(TOKEN?{Authorization:'Bearer '+TOKEN}:{})},body:opts.body!==undefined?JSON.stringify(opts.body):undefined});
   let j={};try{j=await r.json()}catch(e){}
@@ -498,7 +498,7 @@ async function boot(){
 let stopLanding=false;
 (function(){
   const cv=$('#lcv'),ctx=cv.getContext('2d'),tip=$('#ltip'),r=rng(77),types=Object.keys(GC);let W=0,H=0,dpr=1,mx=-999,my=-999,hov=null;
-  const N=[];const build=()=>{N.length=0;const n=Math.round(Math.min(64,Math.max(26,W*H/22000)));for(let i=0;i<n;i++){const t=types[Math.floor(r()*types.length)];N.push({x:r()*W,y:r()*H,vx:(r()-.5)*.22,vy:(r()-.5)*.22,t,id:({customer:'CU-',account:'AC-',tx:'TX-',device:'DV-',ip:'IP-',merchant:'MC-',case:'FR-'}[t])+Math.floor(1000+r()*98000),hist:Math.floor(r()*3)+1})}};
+  const N=[];const build=()=>{N.length=0;const n=Math.round(Math.min(64,Math.max(26,W*H/22000)));for(let i=0;i<n;i++){const t=types[Math.floor(r()*types.length)];N.push({x:r()*W,y:r()*H,vx:(r()-.5)*.22,vy:(r()-.5)*.22,t,id:({customer:'C-',account:'C-',tx:'TX-',device:'DEV-',ip:'IP-',merchant:'P-',case:'HHG-'}[t])+Math.floor(1000+r()*98000),hist:Math.floor(r()*3)+1})}};
   const size=()=>{dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;build()};size();addEventListener('resize',()=>{if(!stopLanding)size()});
   cv.parentElement.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY});
   function tick(){if(stopLanding)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
