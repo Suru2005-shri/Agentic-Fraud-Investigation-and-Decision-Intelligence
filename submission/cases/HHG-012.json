@@ -1,0 +1,98 @@
+{
+  "case_id": "HHG-012",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.6,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3553342"
+    ],
+    "first_suspicious_txn_id": "3553342",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 30.91,
+    "evidence": [
+      {
+        "claim": "Flagged transaction 3553342 is in_person for $30.91; benchmark risk score is 0.55.",
+        "source": "graph",
+        "ref": "query:flagged_transaction",
+        "entity_ids": [
+          "3553342",
+          "C05876-K2"
+        ]
+      },
+      {
+        "claim": "The card has 911 earlier transactions in the local investigation slice; the flagged amount is 0.38× its historical average.",
+        "source": "graph",
+        "ref": "query:card_history",
+        "entity_ids": [
+          "C05876-K2"
+        ]
+      },
+      {
+        "claim": "1 prior confirmed-fraud cases are recorded against this card.",
+        "source": "graph",
+        "ref": "query:case_memory",
+        "entity_ids": [
+          "CC-2370",
+          "CC-0074",
+          "CC-0080",
+          "C05876-K2"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2370",
+      "CC-0003",
+      "CC-0074",
+      "CC-0080",
+      "CC-0140"
+    ],
+    "summary": "Investigation of 3553342 assessed none with a pre-evidence fraud probability of 0.38. The assumed evidence response supports unauthorized activity; 1 transaction(s) are in the identified episode with $30.91 exposure.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-HHG-012"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 5,
+      "assumed_response": "Customer denies the transaction and states they did not authorize it."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: the available signals do not independently justify a block."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer/analyst evidence supports unauthorized activity."
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2/3a: maintain the internal investigation record."
+      }
+    ],
+    "what_changed": "The requested evidence changed the recommendation from verification/monitoring to a confirmed decision."
+  },
+  "sar": {
+    "file": false,
+    "reason": "3a: the evidence does not meet a SAR trigger.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Customer/analyst evidence settled the decision under the policy; further investigation was not expected to change the action.",
+  "tool_calls": 9,
+  "tokens": 0,
+  "latency_s": 0.0
+}

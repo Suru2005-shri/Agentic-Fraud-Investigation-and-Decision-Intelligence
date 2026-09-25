@@ -1,0 +1,147 @@
+{
+  "case_id": "HHG-019",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.95,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3499109",
+      "3503878"
+    ],
+    "first_suspicious_txn_id": "3499109",
+    "connected_card_ids": [
+      "C01104-K2",
+      "C01983-K1",
+      "C06224-K2",
+      "C11309-K1"
+    ],
+    "connected_device_profiles": [
+      "Windows | other | chrome 61.0 | 1280x720"
+    ],
+    "exposure_usd": 216.83,
+    "evidence": [
+      {
+        "claim": "Flagged transaction 3503878 is online for $99.92; benchmark risk score is 0.90.",
+        "source": "graph",
+        "ref": "query:flagged_transaction",
+        "entity_ids": [
+          "3503878",
+          "C07987-K2"
+        ]
+      },
+      {
+        "claim": "The card has 220 earlier transactions in the local investigation slice; the flagged amount is 0.52× its historical average.",
+        "source": "graph",
+        "ref": "query:card_history",
+        "entity_ids": [
+          "C07987-K2"
+        ]
+      },
+      {
+        "claim": "The identity record marks the flagged online device as New for this account.",
+        "source": "graph",
+        "ref": "query:identity_device",
+        "entity_ids": [
+          "3503878",
+          "Windows | other | chrome 61.0 | 1280x720"
+        ]
+      },
+      {
+        "claim": "The observed device profile is shared by 4 other cards within the ±7-day graph window.",
+        "source": "graph",
+        "ref": "query:device_neighbors",
+        "entity_ids": []
+      },
+      {
+        "claim": "3 prior confirmed-fraud cases are recorded against this card.",
+        "source": "graph",
+        "ref": "query:case_memory",
+        "entity_ids": [
+          "C07987-K2",
+          "C01104-K2",
+          "C01983-K1",
+          "C06224-K2",
+          "C11309-K1"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2860",
+      "CC-5026",
+      "CC-2011",
+      "CC-2087",
+      "CC-0117"
+    ],
+    "summary": "Investigation of 3503878 assessed card_not_present_new_device with a pre-evidence fraud probability of 0.73. The assumed evidence response supports unauthorized activity; 2 transaction(s) are in the identified episode with $216.83 exposure.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-HHG-019"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 5,
+      "assumed_response": "Customer denies the transaction and states they did not authorize it."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability is sufficient to open an internal case."
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: a specific shared device profile links multiple cards."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer/analyst evidence supports unauthorized activity."
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2/3a: maintain the internal investigation record."
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2/3a: exposure exceeds $1,000 or the activity connects to a shared device/card."
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: monitor cards linked by the shared device profile."
+      }
+    ],
+    "what_changed": "The requested evidence changed the recommendation from verification/monitoring to a confirmed decision."
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2/3a: confirmed or strongly suspected fraud with exposure above $1,000, a shared device, or repeated prior fraud.",
+    "narrative": "On 2016-11-30, account C07987-K2 was investigated after transaction 3503878 for $99.92 was flagged. The activity occurred through product code R using online at billing region 264.0. The investigation identified 2 transaction(s) in the same episode between 2016-11-30 and 2016-12-01, totaling $216.83. The identity record marked the device as New for this account and the graph linked the profile to 4 other known card(s). The simulated customer_validation response was adverse: Customer denies the transaction and states they did not authorize it. The graph and prior-case memory were used to compare the activity with historical investigations and connected entities. The evidence was assessed as consistent with card not present new device and the account was handled under the applicable fraud policy. The final case record recommends the actions listed in the investigation, including regulatory reporting because the policy trigger was met.",
+    "subjects": [
+      "C07987-K2",
+      "C01104-K2",
+      "C01983-K1",
+      "C06224-K2",
+      "C11309-K1",
+      "Windows | other | chrome 61.0 | 1280x720"
+    ],
+    "total_amount_usd": 216.83,
+    "activity_dates": [
+      "2016-11-30",
+      "2016-12-01"
+    ]
+  },
+  "stop_reason": "Customer/analyst evidence settled the decision under the policy; further investigation was not expected to change the action.",
+  "tool_calls": 9,
+  "tokens": 0,
+  "latency_s": 0.0
+}

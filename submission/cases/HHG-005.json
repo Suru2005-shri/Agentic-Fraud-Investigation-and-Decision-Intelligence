@@ -1,0 +1,132 @@
+{
+  "case_id": "HHG-005",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.91,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3523199"
+    ],
+    "first_suspicious_txn_id": "3523199",
+    "connected_card_ids": [
+      "C11496-K2"
+    ],
+    "connected_device_profiles": [
+      "iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768"
+    ],
+    "exposure_usd": 100.07,
+    "evidence": [
+      {
+        "claim": "Flagged transaction 3523199 is online for $100.07; benchmark risk score is 0.54.",
+        "source": "graph",
+        "ref": "query:flagged_transaction",
+        "entity_ids": [
+          "3523199",
+          "C02923-K1"
+        ]
+      },
+      {
+        "claim": "The card has 91 earlier transactions in the local investigation slice; the flagged amount is 0.57× its historical average.",
+        "source": "graph",
+        "ref": "query:card_history",
+        "entity_ids": [
+          "C02923-K1"
+        ]
+      },
+      {
+        "claim": "The identity record marks the flagged online device as New for this account.",
+        "source": "graph",
+        "ref": "query:identity_device",
+        "entity_ids": [
+          "3523199",
+          "iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768"
+        ]
+      },
+      {
+        "claim": "The observed device profile is shared by 1 other cards within the ±7-day graph window.",
+        "source": "graph",
+        "ref": "query:device_neighbors",
+        "entity_ids": []
+      },
+      {
+        "claim": "3 prior confirmed-fraud cases are recorded against this card.",
+        "source": "graph",
+        "ref": "query:case_memory",
+        "entity_ids": [
+          "C02923-K1",
+          "C11496-K2"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2400",
+      "CC-2857",
+      "CC-2717",
+      "CC-1672",
+      "CC-0189"
+    ],
+    "summary": "Investigation of 3523199 assessed card_not_present_new_device with a pre-evidence fraud probability of 0.69. The assumed evidence response supports unauthorized activity; 1 transaction(s) are in the identified episode with $100.07 exposure.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-HHG-005"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 5,
+      "assumed_response": "Customer denies the transaction and states they did not authorize it."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: the available signals do not independently justify a block."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer/analyst evidence supports unauthorized activity."
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2/3a: maintain the internal investigation record."
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2/3a: exposure exceeds $1,000 or the activity connects to a shared device/card."
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: monitor cards linked by the shared device profile."
+      }
+    ],
+    "what_changed": "The requested evidence changed the recommendation from verification/monitoring to a confirmed decision."
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2/3a: confirmed or strongly suspected fraud with exposure above $1,000, a shared device, or repeated prior fraud.",
+    "narrative": "On 2016-12-07, account C02923-K1 was investigated after transaction 3523199 for $100.07 was flagged. The activity occurred through product code R using online at billing region 330.0. The investigation identified 1 transaction(s) in the same episode between 2016-12-07 and 2016-12-07, totaling $100.07. The identity record marked the device as New for this account and the graph linked the profile to 1 other known card(s). The simulated customer_validation response was adverse: Customer denies the transaction and states they did not authorize it. The graph and prior-case memory were used to compare the activity with historical investigations and connected entities. The evidence was assessed as consistent with card not present new device and the account was handled under the applicable fraud policy. The final case record recommends the actions listed in the investigation, including regulatory reporting because the policy trigger was met.",
+    "subjects": [
+      "C02923-K1",
+      "C11496-K2",
+      "iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768"
+    ],
+    "total_amount_usd": 100.07,
+    "activity_dates": [
+      "2016-12-07",
+      "2016-12-07"
+    ]
+  },
+  "stop_reason": "Customer/analyst evidence settled the decision under the policy; further investigation was not expected to change the action.",
+  "tool_calls": 9,
+  "tokens": 0,
+  "latency_s": 0.0
+}

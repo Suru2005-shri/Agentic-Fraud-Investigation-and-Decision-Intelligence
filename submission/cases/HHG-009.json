@@ -1,0 +1,90 @@
+{
+  "case_id": "HHG-009",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.87,
+    "pattern": "card_not_present_fraud",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3581141"
+    ],
+    "first_suspicious_txn_id": "3581141",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 30.02,
+    "evidence": [
+      {
+        "claim": "Flagged transaction 3581141 is online for $30.02; benchmark risk score is 0.28.",
+        "source": "graph",
+        "ref": "query:flagged_transaction",
+        "entity_ids": [
+          "3581141",
+          "C08299-K1"
+        ]
+      },
+      {
+        "claim": "The card has 47 earlier transactions in the local investigation slice; the flagged amount is 0.46× its historical average.",
+        "source": "graph",
+        "ref": "query:card_history",
+        "entity_ids": [
+          "C08299-K1"
+        ]
+      },
+      {
+        "claim": "The trigger is a customer report stating the flagged purchase was not authorized.",
+        "source": "customer",
+        "ref": "case_pack_trigger",
+        "entity_ids": [
+          "C08299-K1",
+          "3581141"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0074",
+      "CC-0080",
+      "CC-0140",
+      "CC-0157",
+      "CC-0340"
+    ],
+    "summary": "Investigation of 3581141 assessed card_not_present_fraud with a pre-evidence fraud probability of 0.65. The assumed evidence response supports unauthorized activity; 1 transaction(s) are in the identified episode with $30.02 exposure.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-HHG-009"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: the available signals do not independently justify a block."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer/analyst evidence supports unauthorized activity."
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2/3a: maintain the internal investigation record."
+      }
+    ],
+    "what_changed": "The requested evidence changed the recommendation from verification/monitoring to a confirmed decision."
+  },
+  "sar": {
+    "file": false,
+    "reason": "3a: the evidence does not meet a SAR trigger.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Customer/analyst evidence settled the decision under the policy; further investigation was not expected to change the action.",
+  "tool_calls": 9,
+  "tokens": 0,
+  "latency_s": 0.0
+}

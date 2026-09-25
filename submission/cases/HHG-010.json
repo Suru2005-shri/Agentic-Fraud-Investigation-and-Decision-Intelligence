@@ -1,0 +1,154 @@
+{
+  "case_id": "HHG-010",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.75,
+    "pattern": "account_takeover",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3506725"
+    ],
+    "first_suspicious_txn_id": "3506725",
+    "connected_card_ids": [
+      "C00750-K2",
+      "C02250-K2",
+      "C02716-K2",
+      "C03738-K2",
+      "C04108-K2",
+      "C07185-K2",
+      "C07212-K2",
+      "C08989-K2",
+      "C10308-K1",
+      "C11000-K2",
+      "C11143-K1",
+      "C12897-K1"
+    ],
+    "connected_device_profiles": [
+      "Windows | Windows 10 | edge 16.0 | 1366x768"
+    ],
+    "exposure_usd": 1000.03,
+    "evidence": [
+      {
+        "claim": "Flagged transaction 3506725 is online for $1000.03; benchmark risk score is 0.90.",
+        "source": "graph",
+        "ref": "query:flagged_transaction",
+        "entity_ids": [
+          "3506725",
+          "C10434-K1"
+        ]
+      },
+      {
+        "claim": "The card has 34 earlier transactions in the local investigation slice; the flagged amount is 6.38× its historical average.",
+        "source": "graph",
+        "ref": "query:card_history",
+        "entity_ids": [
+          "C10434-K1"
+        ]
+      },
+      {
+        "claim": "The identity record marks the flagged online device as New for this account.",
+        "source": "graph",
+        "ref": "query:identity_device",
+        "entity_ids": [
+          "3506725",
+          "Windows | Windows 10 | edge 16.0 | 1366x768"
+        ]
+      },
+      {
+        "claim": "The observed device profile is shared by 14 other cards within the ±7-day graph window.",
+        "source": "graph",
+        "ref": "query:device_neighbors",
+        "entity_ids": [
+          "C10434-K1",
+          "C00750-K2",
+          "C02250-K2",
+          "C02716-K2",
+          "C03738-K2",
+          "C04108-K2",
+          "C07185-K2",
+          "C07212-K2",
+          "C08989-K2",
+          "C10308-K1",
+          "C11000-K2",
+          "C11143-K1",
+          "C12897-K1"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0873",
+      "CC-5354",
+      "CC-3895",
+      "CC-4603",
+      "CC-3219"
+    ],
+    "summary": "Investigation of 3506725 assessed account_takeover with a pre-evidence fraud probability of 0.53. The assumed evidence response supports unauthorized activity; 1 transaction(s) are in the identified episode with $1000.03 exposure.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-HHG-010"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 5,
+      "assumed_response": "Customer denies the transaction and states they did not authorize it."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: the available signals do not independently justify a block."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer/analyst evidence supports unauthorized activity."
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2/3a: maintain the internal investigation record."
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2/3a: exposure exceeds $1,000 or the activity connects to a shared device/card."
+      }
+    ],
+    "what_changed": "The requested evidence changed the recommendation from verification/monitoring to a confirmed decision."
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2/3a: confirmed or strongly suspected fraud with exposure above $1,000, a shared device, or repeated prior fraud.",
+    "narrative": "On 2016-12-02, account C10434-K1 was investigated after transaction 3506725 for $1000.03 was flagged. The activity occurred through product code R using online at billing region 469.0. The investigation identified 1 transaction(s) in the same episode between 2016-12-02 and 2016-12-02, totaling $1000.03. The identity record marked the device as New for this account and the graph linked the profile to 12 other known card(s). The simulated customer_validation response was adverse: Customer denies the transaction and states they did not authorize it. The graph and prior-case memory were used to compare the activity with historical investigations and connected entities. The evidence was assessed as consistent with account takeover and the account was handled under the applicable fraud policy. The final case record recommends the actions listed in the investigation, including regulatory reporting because the policy trigger was met.",
+    "subjects": [
+      "C10434-K1",
+      "C00750-K2",
+      "C02250-K2",
+      "C02716-K2",
+      "C03738-K2",
+      "C04108-K2",
+      "C07185-K2",
+      "C07212-K2",
+      "C08989-K2",
+      "C10308-K1",
+      "C11000-K2",
+      "C11143-K1",
+      "C12897-K1",
+      "Windows | Windows 10 | edge 16.0 | 1366x768"
+    ],
+    "total_amount_usd": 1000.03,
+    "activity_dates": [
+      "2016-12-02",
+      "2016-12-02"
+    ]
+  },
+  "stop_reason": "Customer/analyst evidence settled the decision under the policy; further investigation was not expected to change the action.",
+  "tool_calls": 9,
+  "tokens": 0,
+  "latency_s": 0.0
+}

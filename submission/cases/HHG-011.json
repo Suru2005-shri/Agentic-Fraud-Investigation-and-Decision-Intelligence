@@ -1,0 +1,155 @@
+{
+  "case_id": "HHG-011",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.98,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3583101",
+      "3583140",
+      "3583199",
+      "3583229",
+      "3583348",
+      "3583368",
+      "3583406",
+      "3583411",
+      "3583415",
+      "3583417",
+      "3583435"
+    ],
+    "first_suspicious_txn_id": "3583101",
+    "connected_card_ids": [
+      "C05595-K1",
+      "C05678-K1"
+    ],
+    "connected_device_profiles": [
+      "SM-G610F Build/NRD90M | chrome 66.0 for android"
+    ],
+    "exposure_usd": 355.34,
+    "evidence": [
+      {
+        "claim": "Flagged transaction 3583368 is online for $131.30; benchmark risk score is 0.39.",
+        "source": "graph",
+        "ref": "query:flagged_transaction",
+        "entity_ids": [
+          "3583368",
+          "C11923-K2"
+        ]
+      },
+      {
+        "claim": "The card has 10312 earlier transactions in the local investigation slice; the flagged amount is 3.33× its historical average.",
+        "source": "graph",
+        "ref": "query:card_history",
+        "entity_ids": [
+          "C11923-K2"
+        ]
+      },
+      {
+        "claim": "The identity record marks the flagged online device as New for this account.",
+        "source": "graph",
+        "ref": "query:identity_device",
+        "entity_ids": [
+          "3583368",
+          "SM-G610F Build/NRD90M | chrome 66.0 for android"
+        ]
+      },
+      {
+        "claim": "The observed device profile is shared by 3 other cards within the ±7-day graph window.",
+        "source": "graph",
+        "ref": "query:device_neighbors",
+        "entity_ids": []
+      },
+      {
+        "claim": "10 prior confirmed-fraud cases are recorded against this card.",
+        "source": "graph",
+        "ref": "query:case_memory",
+        "entity_ids": [
+          "CC-0290",
+          "CC-3039",
+          "CC-3206",
+          "C11923-K2"
+        ]
+      },
+      {
+        "claim": "The trigger is a customer report stating the flagged purchase was not authorized.",
+        "source": "customer",
+        "ref": "case_pack_trigger",
+        "entity_ids": [
+          "C11923-K2",
+          "C05595-K1",
+          "C05678-K1"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0290",
+      "CC-3039",
+      "CC-3206",
+      "CC-2799",
+      "CC-0031"
+    ],
+    "summary": "Investigation of 3583368 assessed card_not_present_new_device with a pre-evidence fraud probability of 0.98. The assumed evidence response supports unauthorized activity; 11 transaction(s) are in the identified episode with $355.34 exposure.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-HHG-011"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability is sufficient to open an internal case."
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: a specific shared device profile links multiple cards."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer/analyst evidence supports unauthorized activity."
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2/3a: maintain the internal investigation record."
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2/3a: exposure exceeds $1,000 or the activity connects to a shared device/card."
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: monitor cards linked by the shared device profile."
+      }
+    ],
+    "what_changed": "The requested evidence changed the recommendation from verification/monitoring to a confirmed decision."
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2/3a: confirmed or strongly suspected fraud with exposure above $1,000, a shared device, or repeated prior fraud.",
+    "narrative": "On 2016-12-29, account C11923-K2 was investigated after transaction 3583368 for $131.30 was flagged. The activity occurred through product code C using online at an online transaction without a billing-region field. The investigation identified 11 transaction(s) in the same episode between 2016-12-29 and 2016-12-29, totaling $355.34. The identity record marked the device as New for this account and the graph linked the profile to 2 other known card(s). The customer reported the transaction as unauthorized. The graph and prior-case memory were used to compare the activity with historical investigations and connected entities. The evidence was assessed as consistent with card not present new device and the account was handled under the applicable fraud policy. The final case record recommends the actions listed in the investigation, including regulatory reporting because the policy trigger was met.",
+    "subjects": [
+      "C11923-K2",
+      "C05595-K1",
+      "C05678-K1",
+      "SM-G610F Build/NRD90M | chrome 66.0 for android"
+    ],
+    "total_amount_usd": 355.34,
+    "activity_dates": [
+      "2016-12-29",
+      "2016-12-29"
+    ]
+  },
+  "stop_reason": "Customer/analyst evidence settled the decision under the policy; further investigation was not expected to change the action.",
+  "tool_calls": 9,
+  "tokens": 0,
+  "latency_s": 0.0
+}
