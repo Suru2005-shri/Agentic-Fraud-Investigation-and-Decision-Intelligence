@@ -341,212 +341,70 @@ The screenshots cover areas including:
 - Explore Graph
 - Project/workspace views
 
-## 15. Screenshot Gallery
 
-### 01_image-1790317873980
+## 15A. ARGUS Website Screenshots
 
-![01_image-1790317873980](docs/tigergraph_savanna/01_image-1790317873980.jpg)
+These are the **actual ARGUS website UI screenshots** used for the project demo. They are stored separately from the TigerGraph Savanna evidence so the repository does not mix application UI with database screenshots.
 
-### 02_1000009522
+![ARGUS Website Screenshot Gallery](docs/ARGUS_WEBSITE_SCREENSHOT_GALLERY.jpg)
 
-![02_1000009522](docs/tigergraph_savanna/02_1000009522.jpg)
+### Individual Screens
 
-### 03_image-1790318351746
+#### 01-login
 
-![03_image-1790318351746](docs/tigergraph_savanna/03_image-1790318351746.jpg)
+![01-login](docs/screenshots/argus_website/01-login.jpg)
 
-### 04_image-1790316603866
+#### 02-command-center
 
-![04_image-1790316603866](docs/tigergraph_savanna/04_image-1790316603866.jpg)
+![02-command-center](docs/screenshots/argus_website/02-command-center.jpg)
 
-### 05_image-1790319449474
+#### 03-investigating-live
 
-![05_image-1790319449474](docs/tigergraph_savanna/05_image-1790319449474.jpg)
+![03-investigating-live](docs/screenshots/argus_website/03-investigating-live.jpg)
 
-### 06_image-1790317106419
+#### 04-evidence-gap
 
-![06_image-1790317106419](docs/tigergraph_savanna/06_image-1790317106419.jpg)
+![04-evidence-gap](docs/screenshots/argus_website/04-evidence-gap.jpg)
 
-### 07_image-1790316819728
+#### 05-customer-validation
 
-![07_image-1790316819728](docs/tigergraph_savanna/07_image-1790316819728.jpg)
+![05-customer-validation](docs/screenshots/argus_website/05-customer-validation.jpg)
 
-### 08_image-1790318745935
+#### 06-customer-link-page
 
-![08_image-1790318745935](docs/tigergraph_savanna/08_image-1790318745935.jpg)
+![06-customer-link-page](docs/screenshots/argus_website/06-customer-link-page.jpg)
 
-### 09_image-1790318380373
+#### 08-after-evidence
 
-![09_image-1790318380373](docs/tigergraph_savanna/09_image-1790318380373.jpg)
+![08-after-evidence](docs/screenshots/argus_website/08-after-evidence.jpg)
 
-### 10_d5a78566-145c-456a-9115-37e9413ad266
+#### 09-approval
 
-![10_d5a78566-145c-456a-9115-37e9413ad266](docs/tigergraph_savanna/10_d5a78566-145c-456a-9115-37e9413ad266.png)
+![09-approval](docs/screenshots/argus_website/09-approval.jpg)
 
-### 11_1000009523
+#### 10-resolved
 
-![11_1000009523](docs/tigergraph_savanna/11_1000009523.jpg)
+![10-resolved](docs/screenshots/argus_website/10-resolved.jpg)
 
-### 12_image-1790319757243
+#### 11-report-with-audit-trail
 
-![12_image-1790319757243](docs/tigergraph_savanna/12_image-1790319757243.jpg)
+![11-report-with-audit-trail](docs/screenshots/argus_website/11-report-with-audit-trail.jpg)
 
-### 13_image-1790318781691
+#### 12-case-memory
 
-![13_image-1790318781691](docs/tigergraph_savanna/13_image-1790318781691.jpg)
+![12-case-memory](docs/screenshots/argus_website/12-case-memory.jpg)
 
-### 14_1000009524
+#### 13-memory-in-graph
 
-![14_1000009524](docs/tigergraph_savanna/14_1000009524.jpg)
+![13-memory-in-graph](docs/screenshots/argus_website/13-memory-in-graph.jpg)
 
-### 15_image-1790317566434
+#### 14-policy
 
-![15_image-1790317566434](docs/tigergraph_savanna/15_image-1790317566434.jpg)
+![14-policy](docs/screenshots/argus_website/14-policy.jpg)
 
-### 16_image-1790318307825
+#### 15-benchmark
 
-![16_image-1790318307825](docs/tigergraph_savanna/16_image-1790318307825.jpg)
-
-### 17_image-1790319091548
-
-![17_image-1790319091548](docs/tigergraph_savanna/17_image-1790319091548.jpg)
-
-### 18_9073c729-3704-43a0-a51b-390392aa0de1
-
-![18_9073c729-3704-43a0-a51b-390392aa0de1](docs/tigergraph_savanna/18_9073c729-3704-43a0-a51b-390392aa0de1.png)
-
-### 19_image-1790318643669
-
-![19_image-1790318643669](docs/tigergraph_savanna/19_image-1790318643669.jpg)
-
-### 20_image-1790319013230
-
-![20_image-1790319013230](docs/tigergraph_savanna/20_image-1790319013230.jpg)
-
-### 21_image-1790317718447
-
-![21_image-1790317718447](docs/tigergraph_savanna/21_image-1790317718447.jpg)
-
-### 22_28b2a033-c745-4464-a7a4-6d99b9330967
-
-![22_28b2a033-c745-4464-a7a4-6d99b9330967](docs/tigergraph_savanna/22_28b2a033-c745-4464-a7a4-6d99b9330967.png)
-
-### 23_image-1790320315808
-
-![23_image-1790320315808](docs/tigergraph_savanna/23_image-1790320315808.jpg)
-
-### 24_image-1790318104385
-
-![24_image-1790318104385](docs/screenshots/tigergraph_savanna/24_image-1790318104385.jpg)
-
-### 25_image-1790315976404
-
-![25_image-1790315976404](docs/screenshots/tigergraph_savanna/25_image-1790315976404.jpg)
-
-### 26_image-1790319807674
-
-![26_image-1790319807674](docs/screenshots/tigergraph_savanna/26_image-1790319807674.jpg)
-
-### 27_image-1790320475620
-
-![27_image-1790320475620](docs/screenshots/tigergraph_savanna/27_image-1790320475620.jpg)
-
-### 28_image-1790319280810
-
-![28_image-1790319280810](docs/screenshots/tigergraph_savanna/28_image-1790319280810.jpg)
-
-### 29_image-1790319517818
-
-![29_image-1790319517818](docs/screenshots/tigergraph_savanna/29_image-1790319517818.jpg)
-
-### 30_image-1790319881951
-
-![30_image-1790319881951](docs/screenshots/tigergraph_savanna/30_image-1790319881951.jpg)
-
-### 31_image-1790316349435
-
-![31_image-1790316349435](docs/screenshots/tigergraph_savanna/31_image-1790316349435.jpg)
-
-### 32_image-1790318469223
-
-![32_image-1790318469223](docs/screenshots/tigergraph_savanna/32_image-1790318469223.jpg)
-
-### 33_image-1790318519004
-
-![33_image-1790318519004](docs/screenshots/tigergraph_savanna/33_image-1790318519004.jpg)
-
-### 34_image-1790317965143
-
-![34_image-1790317965143](docs/screenshots/tigergraph_savanna/34_image-1790317965143.jpg)
-
-### 35_image-1790318067764
-
-![35_image-1790318067764](docs/screenshots/tigergraph_savanna/35_image-1790318067764.jpg)
-
-### 36_image-1790316139750
-
-![36_image-1790316139750](docs/screenshots/tigergraph_savanna/36_image-1790316139750.jpg)
-
-### 37_1000009525
-
-![37_1000009525](docs/screenshots/tigergraph_savanna/37_1000009525.jpg)
-
-### 38_1000009526
-
-![38_1000009526](docs/screenshots/tigergraph_savanna/38_1000009526.jpg)
-
-### 39_image-1790318231175
-
-![39_image-1790318231175](docs/tigergraph_savanna/39_image-1790318231175.jpg)
-
-### 40_image-1790317811405
-
-![40_image-1790317811405](docs/tigergraph_savanna/40_image-1790317811405.jpg)
-
-### 41_image-1790316952317
-
-![41_image-1790316952317](docs/tigergraph_savanna/41_image-1790316952317.jpg)
-
-### 42_image-1790316642840
-
-![42_image-1790316642840](docs/tigergraph_savanna/42_image-1790316642840.jpg)
-
-### 43_image-1790319371195
-
-![43_image-1790319371195](docs/tigergraph_savanna/43_image-1790319371195.jpg)
-
-### 44_image-1790317660703
-
-![44_image-1790317660703](docs/tigergraph_savanna/44_image-1790317660703.jpg)
-
-### 45_image-1790320670473
-
-![45_image-1790320670473](docs/tigergraph_savanna/45_image-1790320670473.jpg)
-
-### 46_image-1790320754969
-
-![46_image-1790320754969](docs/tigergraph_savanna/46_image-1790320754969.jpg)
-
-### 47_image-1790316241446
-
-![47_image-1790316241446](docs/tigergraph_savanna/47_image-1790316241446.jpg)
-
-### 48_image-1790318591853
-
-![48_image-1790318591853](docs/tigergraph_savanna/48_image-1790318591853.jpg)
-
-### current_28b2a033-c745-4464-a7a4-6d99b9330967
-
-![current_28b2a033-c745-4464-a7a4-6d99b9330967](docs/tigergraph_savanna/current_28b2a033-c745-4464-a7a4-6d99b9330967.png)
-
-### current_9073c729-3704-43a0-a51b-390392aa0de1
-
-![current_9073c729-3704-43a0-a51b-390392aa0de1](docs/tigergraph_savanna/current_9073c729-3704-43a0-a51b-390392aa0de1.png)
-
-### current_d5a78566-145c-456a-9115-37e9413ad266
-
-![current_d5a78566-145c-456a-9115-37e9413ad266](docs/tigergraph_savanna/current_d5a78566-145c-456a-9115-37e9413ad266.png)
-
+![15-benchmark](docs/screenshots/argus_website/15-benchmark.jpg)
 
 ## 16. How to Reproduce the TigerGraph Setup
 
@@ -656,3 +514,7 @@ Official documentation:
 **Agentic Fraud Investigation using TigerGraph Savanna**
 
 > From an uncertain fraud signal to connected evidence, explainable investigation and case memory.
+
+```
+
+The website screenshots are kept as the original captured project UI images; no artificial replacement screenshots are used.
