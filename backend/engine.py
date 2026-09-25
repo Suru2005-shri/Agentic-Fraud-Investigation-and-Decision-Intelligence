@@ -1,324 +1,206 @@
-"""The investigation agent: a deterministic, auditable workflow over the graph and policy data.
+"""Agent workflow, evidence loop and approval gate."""
+import threading,time
+from . import db,graph,scoring,retrieval
+from .config import DB_PATH,STEP_DELAY,THRESHOLD
 
-Each step reads real data, writes its result to the database (timeline, evidence, findings,
-meters) and pauses briefly so the interface can show the case as it progresses. There is no
-language model here. A model-driven orchestrator can replace `investigate` and call the
-same functions in `graph`, `scoring` and `retrieval` as tools (see docs/INTEGRATION.md).
-"""
-import threading
-import time
-
-from . import db, graph, retrieval, scoring
-from .config import DB_PATH, STEP_DELAY, THRESHOLD
-
-EVIDENCE_POINTS = {"customer": 18, "step_up": 16, "analyst": 12}
-EVIDENCE_NAMES = {"customer": "Customer validation", "step_up": "Step-up authentication",
-                  "analyst": "Analyst information request"}
-RISK_SHIFT = {"customer": 14, "step_up": 12, "analyst": 10}
-APPROVER_ROLES = {"approver", "admin"}
-
+EVIDENCE_POINTS={"customer":18,"step_up":16,"analyst":12}
+EVIDENCE_NAMES={"customer":"Customer validation","step_up":"Step-up authentication","analyst":"Analyst information request"}
+APPROVER_ROLES={"approver","admin"}
 
 class RuleError(Exception):
-    """A request that the case state or the user's role does not allow."""
+    def __init__(self,message,status=409):
+        super().__init__(message); self.status=status
 
-    def __init__(self, message: str, status: int = 409):
-        super().__init__(message)
-        self.status = status
+def inr(n):
+    return "$"+format(float(n),",.2f")
 
+def needs_approval(rec):
+    return rec in {"Block card","Escalate to analyst"}
 
-def inr(n: float) -> str:
-    s = f"{int(round(n))}"
-    head, tail = s[:-3], s[-3:]
-    if head:
-        parts = []
-        while len(head) > 2:
-            parts.insert(0, head[-2:])
-            head = head[:-2]
-        if head:
-            parts.insert(0, head)
-        s = ",".join(parts) + "," + tail
-    return "\u20B9" + s
+def decide(risk,prob=None):
+    p=prob if prob is not None else risk/99
+    if p>=.85: return "Block card"
+    if p>=.70: return "Create fraud case"
+    if p>=.45: return "Request customer validation"
+    return "Allow transaction with monitoring"
 
-
-def needs_approval(rec: str) -> bool:
-    return rec == "Escalate to analyst"
-
-
-def decide(risk: int) -> str:
-    return "Escalate to analyst" if risk >= 75 else "Monitor account" if risk >= 55 else "Allow with monitoring"
-
-
-def _status(stage: str, rec: str) -> str:
-    if stage == "awaiting":
-        return "Awaiting evidence"
-    if stage == "ready" and needs_approval(rec):
-        return "Approval pending"
-    if stage == "resolved":
-        return "Resolved"
+def _status(stage,rec):
+    if stage=="awaiting": return "Awaiting evidence"
+    if stage=="ready" and needs_approval(rec): return "Approval pending"
+    if stage=="resolved": return "Resolved"
     return "Investigating"
 
-
-def spawn(fn, *args) -> None:
-    """Run `fn(conn, *args)` on a background thread with its own connection."""
-    path = DB_PATH
-
+def spawn(fn,*args):
     def run():
-        conn = db.connect(path)
-        try:
-            fn(conn, *args)
-        finally:
-            conn.close()
+        conn=db.connect(DB_PATH)
+        try: fn(conn,*args)
+        finally: conn.close()
+    threading.Thread(target=run,daemon=True).start()
 
-    threading.Thread(target=run, daemon=True).start()
-
-
-def begin(conn, cid: str) -> bool:
-    cur = conn.execute("update cases set stage='investigating', status='Investigating' where id=? and stage='new'", (cid,))
+def _write_case_memory(conn,cid):
+    c=db.get_case(conn,cid)
+    if not c: return
+    conn.execute("insert or ignore into entities(id,type,label,attrs) values(?,?,?,?)",
+                 (cid,"case",cid,db.dumps({"outcome":c["outcome"],"pattern":c["pattern"],"exposure":c["amount"]})))
+    conn.execute("insert or ignore into edges(src,dst,rel) values(?,?,?)",(cid,c["account"],"case on"))
+    conn.execute("insert or ignore into edges(src,dst,rel) values(?,?,?)",(cid,c["tx"],"affected transaction"))
     conn.commit()
-    return cur.rowcount == 1
 
+def begin(conn,cid):
+    cur=conn.execute("update cases set stage='investigating',status='Investigating' where id=? and stage='new'",(cid,))
+    conn.commit(); return cur.rowcount==1
 
-def investigate(conn, cid: str, delay: float = STEP_DELAY) -> None:
-    c = db.get_case(conn, cid)
-    a = scoring.analyze(conn, c)
-    rp, sp = scoring.parts(a)
-    G = graph.subgraph(conn, c)
-    N = G["nodes"]
-    ids = lambda pred: [n["id"] for n in N if pred(n)]  # noqa: E731
-
-    risk_final = min(99, round(sum(rp.values())))
-    top = a["priors"][0] if a["priors"] else None
-    dev = a["device"]
-
-    query = (f"{c['pattern']} payment {a['ratio']:.0f} times average amount above 50,000 rupees device linked to "
-             f"{len(a['mates'])} unrelated accounts customer authorization block")
-    if risk_final < 35:
-        query += " low risk release monitoring"
-    policy = retrieval.search(conn, query, c["pattern"], k=3)[0]
-    first_sentence = policy["text"].split(". ")[0].rstrip(".") + "."
-
-    plan = [
-        {"t": "Trigger received",
-         "d": f"{c['trigger']}: {inr(c['amount'])} at {c['merchant']}",
-         "ev": ("Transaction signal", f"{inr(c['amount'])} is {a['ratio']:.1f}\u00D7 this account's average of {inr(a['avg'])}",
-                "Transaction data", "red" if a["ratio"] >= 3 else ""),
-         "f": ["Transaction anomaly"] if a["ratio"] >= 2.5 else [],
-         "lit": [c["tx"]] + ids(lambda n: n["type"] == "customer" and n["depth"] == 1),
-         "act": "Retrieved transaction", "risk": rp["base"] + rp["anomaly"], "suff": sp["transaction"]},
-        {"t": "Transaction history analysed",
-         "d": f"Compared with {a['n_hist']} earlier transactions" + ("; first payment to this merchant" if a["first_time"] else ""),
-         "f": ["First-time merchant"] if a["first_time"] else [],
-         "lit": [c["merchant_id"]], "act": "Retrieved transaction history",
-         "risk": rp["merchant"], "suff": sp["history"]},
+def investigate(conn,cid,delay=STEP_DELAY):
+    c=db.get_case(conn,cid)
+    a=scoring.analyze(conn,c)
+    p=scoring.parts(a)
+    if c["pattern"]=="undetermined":
+        db.set_case(conn,cid,pattern=a["pattern"])
+        c=db.get_case(conn,cid)
+    # The trigger/customer report is already evidence; do not fabricate an answer.
+    steps=[
+      ("Trigger received",f"{c['trigger']}",("Trigger",c["trigger"],"case pack","amber")),
+      ("Transaction history analysed",
+       f"Reviewed {a['hist_count']} prior transactions; flagged amount is {inr(c['amount'])}, {a['ratio']:.1f}× the historical average.",
+       ("History",f"{a['hist_count']} prior transactions; amount ratio {a['ratio']:.1f}×","graph:card_history","")),
+      ("Graph relationships discovered",
+       f"{len(a['shared_accounts'])} other cards share the observed device profile within ±7 days." if a["profile"] else "No usable device profile is available for this transaction.",
+       ("Device relationship",f"{len(a['shared_accounts'])} connected cards on the device profile" if a["profile"] else "No device profile","graph:device_neighbors","teal")),
+      ("Prior case memory retrieved",
+       f"{len(a['priors'])} historical cases ranked; top match {a['priors'][0]['id']} at {a['priors'][0]['sim']}%." if a["priors"] else "No useful prior case matched.",
+       ("Case memory",a["priors"][0]["id"] if a["priors"] else "No match","graph:case_memory","")),
+      ("Pattern assessment",
+       f"Pattern assessed as {a['pattern']}. Evidence includes new_device={a['new_device']}, online_burst={a['burst_count']}, out_of_region={a['out_region']}, card_testing={a['card_testing']}.",
+       ("Pattern",a["pattern"],"agent:pattern_classifier","amber")),
     ]
-    if a["mates"]:
-        d3 = {"d": f"Device {dev} links to {len(a['mates'])} other accounts",
-              "ev": ("Device relationship", f"{len(a['mates'])} connected accounts share this device", "Graph store", "teal"),
-              "f": ["Shared device", "Connected account"]}
-    elif a["ip_mates"]:
-        d3 = {"d": f"IP address shared with {len(a['ip_mates'])} other accounts",
-              "ev": ("IP relationship", f"{len(a['ip_mates'])} accounts share an IP address", "Graph store", "teal"),
-              "f": ["Shared IP address"]}
+    if a["strong_shared"]:
+        db.fnd_add(conn,cid,"Specific device profile is shared across multiple cards")
+    if a["new_device"]: db.fnd_add(conn,cid,"Identity record marks the device as New")
+    if a["card_testing"]: db.fnd_add(conn,cid,"Card-testing sequence detected")
+    if a["out_region"]: db.fnd_add(conn,cid,"Card-present transaction uses a region not previously seen on this card")
+    if a["same_fraud"]>=2: db.fnd_add(conn,cid,f"{a['same_fraud']} prior confirmed-fraud cases exist on this card")
+    if a["customer_report"]: db.fnd_add(conn,cid,"Customer dispute is part of the trigger evidence")
+    for i,(title,detail,ev) in enumerate(steps):
+        if delay: time.sleep(delay if i else delay*.5)
+        db.tl_add(conn,cid,title,detail,"done",[],i+1)
+        db.act_add(conn,cid,"Agent: "+title)
+        db.ev_add(conn,cid,*ev)
+    # Update meters.
+    risk=p["risk"]; conf=p["confidence"]; suff=p["suff"]
+    # Existing customer denial is decisive enough to move to ready; other risk-score cases may request validation.
+    analyst_trigger="analyst request" in str(c["trigger"]).lower()
+    if analyst_trigger:
+        rec="Request analyst information"; stage="gap"
+        db.tl_add(conn,cid,"Analyst evidence required","The trigger explicitly asks for connected-card investigation.")
+        db.tl_add(conn,cid,"Analyst information pending","Waiting for an evidence request","pending")
+    elif a["customer_report"]:
+        rec="Block card" if a["probability"]>=.55 else "Request customer validation"
+        stage="ready" if rec!="Request customer validation" else "gap"
+        if rec=="Block card": db.tl_add(conn,cid,"Customer denial recognized", "The trigger itself is a customer dispute; no second denial is required.")
+    elif a["probability"]<.70:
+        rec="Request customer validation"; stage="gap"
+        db.tl_add(conn,cid,"Evidence gap identified","A risk signal alone is insufficient; customer authorization is required.")
+        db.tl_add(conn,cid,"Customer validation pending","Waiting for an evidence request","pending")
     else:
-        d3 = {"d": "No shared devices or IP addresses found", "f": []}
-    plan.append({"t": "Graph relationships discovered", **d3,
-                 "lit": ids(lambda n: n["type"] in ("device", "ip") and n["depth"] == 1)
-                        + ids(lambda n: n["type"] == "account" and n["depth"] == 2),
-                 "depth": 2 if (a["mates"] or a["ip_mates"]) else None, "act": "Traversed graph",
-                 "risk": rp["device"], "suff": sp["graph"]})
-    if top:
-        plan.append({"t": "Prior case retrieved", "d": f"{top['id']} matches at {top['sim']}% similarity ({top['why']})",
-                     "ev": ("Historical case", f"{top['sim']}% similarity to {top['id']} ({top['out'].lower()})", "Case memory", ""),
-                     "f": ["Prior case similarity"] if top["sim"] >= 60 else [],
-                     "lit": ids(lambda n: n["type"] == "case") + ids(lambda n: n["type"] == "customer" and n["depth"] == 3),
-                     "depth": 3, "act": "Retrieved prior cases", "risk": rp["prior"], "suff": sp["prior"]})
-    else:
-        plan.append({"t": "Prior case retrieved", "d": "No similar resolved cases", "act": "Searched case memory",
-                     "risk": 0, "suff": 0})
-    plan.append({"t": "Policy evaluated", "d": f"Section {policy['id']} applies to this payment",
-                 "ev": ("Policy requirement", f"{policy['title']}: {first_sentence}", "Fraud policy dataset (GraphRAG)", "amber"),
-                 "act": "Retrieved policy evidence", "risk": 0, "suff": sp["policy"]})
+        rec=decide(risk,a["probability"]); stage="ready"
+        db.tl_add(conn,cid,"Evidence sufficiency assessed",f"Current evidence supports {rec}.")
+    db.set_case(conn,cid,risk=risk,conf=conf,unc=100-conf,suff=suff,rec=rec,stage=stage,
+                status=_status(stage,rec),gap="Customer authorization not established." if stage=="gap" else None,
+                adverse=1 if a["customer_report"] else 0,
+                before_json=db.dumps({"risk":risk,"conf":conf,"rec":rec}))
+    db.audit(conn,"agent","system","investigate",cid,f"pattern={a['pattern']}; probability={a['probability']:.2f}")
 
-    risk_acc = suff_acc = 0.0
-    for i, s in enumerate(plan):
-        if delay:
-            time.sleep(delay if i else delay * 0.6)
-        risk_acc += s["risk"]
-        suff_acc += s["suff"]
-        db.tl_add(conn, cid, s["t"], s["d"], "done", s.get("lit"), s.get("depth"))
-        db.act_add(conn, cid, s["act"])
-        if s.get("ev"):
-            db.ev_add(conn, cid, *s["ev"])
-        for f in s.get("f", []):
-            db.fnd_add(conn, cid, f)
-        conf = round(min(0.98, suff_acc) * 100 * 0.86)
-        db.set_case(conn, cid, risk=min(99, round(risk_acc)), conf=conf, unc=100 - conf,
-                    suff=round(min(0.98, suff_acc) * 100))
-
-    if delay:
-        time.sleep(delay)
-    suff = round(min(0.98, suff_acc) * 100)
-    if risk_final < 35:
-        suff = max(suff, 88)  # policy 5.1: low-risk payments do not need customer validation
-    conf = round(suff * 0.86)
-    if suff < THRESHOLD:
-        db.tl_add(conn, cid, "Evidence gap identified", "Customer authorization not established")
-        db.act_add(conn, cid, "Evidence sufficiency evaluated")
-        db.tl_add(conn, cid, "Customer validation pending", "Waiting for an evidence request", "pending")
-        rec = "Request customer validation"
-        db.set_case(conn, cid, risk=risk_final, conf=conf, unc=100 - conf, suff=suff, stage="gap", rec=rec,
-                    gap="Customer authorization not established.", status="Investigating",
-                    before_json=db.dumps({"risk": risk_final, "conf": conf, "rec": rec}))
-    else:
-        rec = decide(risk_final)
-        db.tl_add(conn, cid, "Evidence sufficiency confirmed", f"Evidence meets the {THRESHOLD}% threshold")
-        db.act_add(conn, cid, "Evidence sufficiency evaluated")
-        db.set_case(conn, cid, risk=risk_final, conf=conf, unc=100 - conf, suff=suff, stage="ready", rec=rec,
-                    gap=None, adverse=1 if risk_final >= 55 else 0, status=_status("ready", rec))
-
-
-def request_evidence(conn, cid: str, rtype: str, actor: str, role: str, delay: float = STEP_DELAY) -> int:
-    if rtype not in EVIDENCE_POINTS:
-        raise RuleError("Unknown evidence type.", 400)
-    c = db.get_case(conn, cid)
-    if c["stage"] != "gap":
-        raise RuleError("This case is not waiting for an evidence request.")
-    used = [u for u in (c["used_types"] or "").split(",") if u]
-    if rtype in used:
-        raise RuleError(f"{EVIDENCE_NAMES[rtype]} has already been requested for this case.")
-    cur = conn.execute("insert into requests(case_id,type,status,created_at,actor) values(?,?,?,?,?)",
-                       (cid, rtype, "pending", db.now(), actor))
-    conn.commit()
-    detail = {"customer": "Sent to the customer app", "step_up": "Challenge sent to the registered device",
-              "analyst": "Sent to the analyst desk"}[rtype]
-    db.tl_add(conn, cid, f"{EVIDENCE_NAMES[rtype]} requested", detail)
-    db.tl_add(conn, cid, "Waiting for response", "", "pending")
-    db.act_add(conn, cid, f"{EVIDENCE_NAMES[rtype]} requested")
-    db.set_case(conn, cid, stage="awaiting", status="Awaiting evidence", used_types=",".join(used + [rtype]))
-    db.audit(conn, actor, role, "request_evidence", cid, EVIDENCE_NAMES[rtype])
+def request_evidence(conn,cid,rtype,actor,role,delay=STEP_DELAY):
+    if rtype not in EVIDENCE_POINTS: raise RuleError("Unknown evidence type.",400)
+    c=db.get_case(conn,cid)
+    if c["stage"]!="gap": raise RuleError("This case is not waiting for an evidence request.")
+    used=[u for u in (c["used_types"] or "").split(",") if u]
+    if rtype in used: raise RuleError(f"{EVIDENCE_NAMES[rtype]} already requested.")
+    cur=conn.execute("insert into requests(case_id,type,status,created_at,actor) values(?,?,?,?,?)",
+                     (cid,rtype,"pending",db.now(),actor)); conn.commit()
+    detail={"customer":"Customer validation link created","step_up":"Step-up challenge created","analyst":"Analyst evidence task created"}[rtype]
+    db.tl_add(conn,cid,f"{EVIDENCE_NAMES[rtype]} requested",detail)
+    db.tl_add(conn,cid,"Waiting for response","","pending")
+    db.act_add(conn,cid,f"Requested {EVIDENCE_NAMES[rtype]}")
+    db.set_case(conn,cid,stage="awaiting",status="Awaiting evidence",used_types=",".join(used+[rtype]))
+    db.audit(conn,actor,role,"request_evidence",cid,EVIDENCE_NAMES[rtype])
     return cur.lastrowid
 
+def analyst_reply(conn,cid,rid,delay):
+    if delay: time.sleep(delay*2)
+    c=db.get_case(conn,cid); a=scoring.analyze(conn,c)
+    respond(conn,rid,a["strong_shared"] or a["same_fraud"]>=1,"analyst desk","system")
 
-def analyst_reply(conn, cid: str, rid: int, delay: float) -> None:
-    """The analyst desk answers by checking the device network for the case."""
-    time.sleep(max(delay * 2.4, 0))
-    c = db.get_case(conn, cid)
-    a = scoring.analyze(conn, c)
-    respond(conn, rid, adverse=len(a["mates"]) >= 2, actor="analyst desk", role="system")
-
-
-def respond(conn, rid: int, adverse: bool, actor: str, role: str) -> None:
-    r = conn.execute("select * from requests where id=?", (rid,)).fetchone()
-    if not r or r["status"] != "pending":
-        raise RuleError("This evidence request has already been answered.")
-    cid, rtype = r["case_id"], r["type"]
-    c = db.get_case(conn, cid)
-    conn.execute("update requests set status='answered', adverse=?, responded_at=?, actor=? where id=?",
-                 (1 if adverse else 0, db.now(), actor, rid))
-    conn.commit()
-    if rtype == "analyst":
-        text = ("Analyst confirmed device reuse across unrelated accounts" if adverse
-                else "Analyst found no link between the accounts on this device")
-    elif rtype == "customer":
-        text = "Customer denied authorizing the transaction" if adverse else "Customer confirmed authorizing the transaction"
-    else:
-        text = "Step-up authentication failed" if adverse else "Step-up authentication passed"
-
-    before = {"risk": c["risk"], "conf": c["conf"], "rec": c["rec"]}
-    suff = min(98, c["suff"] + EVIDENCE_POINTS[rtype])
-    risk = c["risk"]
+def respond(conn,rid,adverse,actor,role):
+    r=conn.execute("select * from requests where id=?",(rid,)).fetchone()
+    if not r or r["status"]!="pending": raise RuleError("Evidence request already answered.")
+    cid,rtype=r["case_id"],r["type"]; c=db.get_case(conn,cid); a=scoring.analyze(conn,c)
+    conn.execute("update requests set status='answered',adverse=?,responded_at=?,actor=? where id=?",
+                 (1 if adverse else 0,db.now(),actor,rid)); conn.commit()
+    if rtype=="customer": text="Customer denied authorizing the transaction" if adverse else "Customer confirmed authorizing the transaction"
+    elif rtype=="step_up": text="Step-up authentication failed" if adverse else "Step-up authentication passed"
+    else: text="Analyst confirmed a connected-device relationship" if adverse else "Analyst found no adverse connected-device relationship"
+    db.tl_add(conn,cid,"Evidence received",text); db.act_add(conn,cid,"Received "+EVIDENCE_NAMES[rtype].lower())
+    db.ev_add(conn,cid,EVIDENCE_NAMES[rtype],text,"Customer" if rtype=="customer" else "Analyst","red" if adverse else "teal")
+    before={"risk":c["risk"],"conf":c["conf"],"rec":c["rec"]}
+    # Adjust probability without pretending this is a model label.
+    p=a["probability"]
+    p=min(.98,p+.22) if adverse else max(.05,p-.35)
+    risk=round(p*99); conf=min(98,c["conf"]+EVIDENCE_POINTS[rtype]//2)
     if adverse:
-        risk = min(99, risk + RISK_SHIFT[rtype])
-        db.fnd_add(conn, cid, "Authorization denied" if rtype != "analyst" else "Analyst confirmed device reuse")
+        db.fnd_add(conn,cid,"Authorization denied" if rtype!="analyst" else "Adverse analyst evidence")
     else:
-        risk = max(18, round(risk * 0.45))
-        db.fnd_add(conn, cid, "Authorization confirmed" if rtype != "analyst" else "Analyst found no link")
-    direct = rtype in ("customer", "step_up")
-    consistent = direct and ((adverse and risk >= 75) or (not adverse and risk < 55))
-    conf = min(98, round(suff * 0.86) + (10 if consistent else 0))
-    used = {u for u in (c["used_types"] or "").split(",") if u}
-    exhausted = len(used) >= 3
-
-    db.tl_add(conn, cid, "Evidence received", text)
-    db.act_add(conn, cid, f"Received {EVIDENCE_NAMES[rtype].lower()}")
-    db.ev_add(conn, cid, EVIDENCE_NAMES[rtype], text, "Analyst response" if rtype == "analyst" else "Customer response",
-              "red" if adverse else "teal")
-    if suff >= THRESHOLD or exhausted:
-        rec = decide(risk) if suff >= THRESHOLD else "Escalate to analyst"
-        stage, gap = "ready", None
-        if suff < THRESHOLD:
-            db.tl_add(conn, cid, "Evidence still insufficient", "Every evidence request has been used, so the case goes to an analyst")
+        db.fnd_add(conn,cid,"Authorization confirmed" if rtype!="analyst" else "No adverse analyst link")
+    if not adverse:
+        rec="Close no fraud"; stage="ready"; gap=None
+    elif p>=.70:
+        rec="Block card"; stage="ready"; gap=None
     else:
-        rec, stage = "Request additional evidence", "gap"
-        gap = f"Evidence is still below the {THRESHOLD}% threshold."
-        db.tl_add(conn, cid, "Evidence still insufficient", gap)
-        db.tl_add(conn, cid, "Additional evidence pending", "Waiting for another evidence request", "pending")
-    db.tl_add(conn, cid, "Assessment updated",
-              f"Risk {before['risk']} \u2192 {risk}, confidence {before['conf']}% \u2192 {conf}%")
-    if rec != before["rec"]:
-        db.tl_add(conn, cid, "Recommendation changed", f"{before['rec']} \u2192 {rec}")
-    db.act_add(conn, cid, "Evidence sufficiency re-evaluated")
-    db.set_case(conn, cid, risk=risk, conf=conf, unc=100 - conf, suff=suff, rec=rec, stage=stage, gap=gap,
-                adverse=1 if adverse else 0, add_ev=f"{EVIDENCE_NAMES[rtype]}: {text}",
-                before_json=db.dumps(before), after_json=db.dumps({"risk": risk, "conf": conf, "rec": rec}),
-                status=_status(stage, rec))
-    db.audit(conn, actor, role, "evidence_response", cid, text)
+        rec="Request additional evidence"; stage="gap"; gap="Evidence remains below the decision threshold."
+        db.tl_add(conn,cid,"Additional evidence pending",gap,"pending")
+    db.tl_add(conn,cid,"Assessment updated",f"Fraud probability changed to {p:.2f}; recommendation is {rec}.")
+    if rec!=before["rec"]: db.tl_add(conn,cid,"Recommendation changed",f"{before['rec']} → {rec}")
+    db.set_case(conn,cid,risk=risk,conf=conf,unc=100-conf,suff=min(98,c["suff"]+EVIDENCE_POINTS[rtype]),
+                rec=rec,stage=stage,gap=gap,adverse=1 if adverse else 0,
+                add_ev=f"{EVIDENCE_NAMES[rtype]}: {text}",
+                before_json=db.dumps(before),after_json=db.dumps({"risk":risk,"conf":conf,"rec":rec}),
+                status=_status(stage,rec))
+    db.audit(conn,actor,role,"evidence_response",cid,text)
 
+def decide_approval(conn,cid,decision,user,delay=STEP_DELAY):
+    c=db.get_case(conn,cid)
+    if c["stage"]!="ready" or not needs_approval(c["rec"]): raise RuleError("No action is waiting for approval.")
+    if user["role"] not in APPROVER_ROLES: raise RuleError("Your role cannot approve or reject this action.",403)
+    if decision=="approve":
+        db.set_case(conn,cid,approval=f"Approved by {user['name']}",action="BLOCK_CARD / escalate as required",stage="closing",status="Investigating")
+        db.act_add(conn,cid,f"Approved by {user['name']}")
+        db.audit(conn,user["username"],user["role"],"approve",cid,c["rec"]); return "closing"
+    if decision=="reject":
+        db.set_case(conn,cid,approval=f"Rejected by {user['name']}")
+        db.audit(conn,user["username"],user["role"],"reject",cid,c["rec"]); return "ready"
+    if decision=="more_evidence":
+        db.set_case(conn,cid,stage="gap",rec="Request additional evidence",suff=min(c["suff"],80),
+                    used_types="",gap="Approver requested more evidence.",status="Investigating")
+        db.audit(conn,user["username"],user["role"],"request_more_evidence",cid,""); return "gap"
+    raise RuleError("Decision must be approve, reject or more_evidence.",400)
 
-def decide_approval(conn, cid: str, decision: str, user: dict, delay: float = STEP_DELAY) -> str:
-    c = db.get_case(conn, cid)
-    if c["stage"] != "ready" or not needs_approval(c["rec"]):
-        raise RuleError("This case has no action waiting for approval.")
-    if user["role"] not in APPROVER_ROLES:
-        raise RuleError(f"Your role ({user['role']}) cannot approve or reject actions. Sign in as an approver.", 403)
-    name = user["name"]
-    if decision == "approve":
-        db.set_case(conn, cid, approval=f"Approved by {name}", action="Escalated to fraud analyst; transaction held",
-                    stage="closing", status="Investigating")
-        db.act_add(conn, cid, f"Approved by {name}")
-        db.audit(conn, user["username"], user["role"], "approve", cid, c["rec"])
-        return "closing"
-    if decision == "reject":
-        db.set_case(conn, cid, approval=f"Rejected by {name}")
-        db.tl_add(conn, cid, "Approval rejected", f"Rejected by {name}; the recommendation stays open")
-        db.act_add(conn, cid, "Approval rejected")
-        db.audit(conn, user["username"], user["role"], "reject", cid, c["rec"])
-        return "ready"
-    if decision == "more_evidence":
-        db.tl_add(conn, cid, "More evidence requested", f"Requested by {name} before approving", "done")
-        db.tl_add(conn, cid, "Additional evidence pending", "Waiting for an evidence request", "pending")
-        db.act_add(conn, cid, "Approver asked for more evidence")
-        db.set_case(conn, cid, stage="gap", rec="Request additional evidence", suff=min(c["suff"], 80), used_types="",
-                    gap="The approver asked for further evidence before deciding.", status="Investigating")
-        db.audit(conn, user["username"], user["role"], "request_more_evidence", cid, "")
-        return "gap"
-    raise RuleError("Decision must be approve, reject or more_evidence.", 400)
-
-
-def apply_action(conn, cid: str, user: dict) -> str:
-    c = db.get_case(conn, cid)
-    if c["stage"] != "ready":
-        raise RuleError("This case has no action ready to apply.")
-    if needs_approval(c["rec"]):
-        raise RuleError("This action needs human approval.", 403)
-    action = "Account placed on monitoring" if c["rec"] == "Monitor account" else "Transaction released with 30-day monitoring"
-    db.set_case(conn, cid, action=action, approval="Not required by policy", stage="closing", status="Investigating")
-    db.act_add(conn, cid, "Action applied: " + action)
-    db.audit(conn, user["username"], user["role"], "apply_action", cid, action)
+def apply_action(conn,cid,user):
+    c=db.get_case(conn,cid)
+    if c["stage"]!="ready": raise RuleError("No action is ready.")
+    if needs_approval(c["rec"]): raise RuleError("This action needs human approval.",403)
+    action="Transaction released with monitoring" if "Close" not in c["rec"] else "Alert closed as legitimate"
+    db.set_case(conn,cid,action=action,approval="Not required by policy",stage="closing",status="Investigating")
+    db.act_add(conn,cid,"Action applied: "+action); db.audit(conn,user["username"],user["role"],"apply_action",cid,action)
     return "closing"
 
-
-def close_case(conn, cid: str, live: int = 1, delay: float = STEP_DELAY) -> None:
-    c = db.get_case(conn, cid)
-    appr = needs_approval(c["rec"])
-    items = ["Investigation complete", "Evidence recorded", "Decision recorded", "Action recorded",
-             "Approval recorded" if appr else "Approval not required", "Case memory updated"]
+def close_case(conn,cid,live=1,delay=STEP_DELAY):
+    c=db.get_case(conn,cid)
+    fraud=(c["adverse"]==1 or (c["rec"]=="Block card"))
+    items=["Investigation complete","Evidence recorded","Decision recorded","Action recorded","Approval recorded" if needs_approval(c["rec"]) else "Approval not required","Case memory updated"]
     for t in items:
-        if delay:
-            time.sleep(delay * 0.65)
-        db.tl_add(conn, cid, t, "")
-        db.act_add(conn, cid, t)
-    fraud = c["adverse"] == 1 or (c["adverse"] is None and c["risk"] >= 75)
-    db.set_case(conn, cid, outcome="Confirmed fraud" if fraud else "Cleared", stage="resolved", status="Resolved",
-                resolved_at=db.now(), live=live)
-    db.audit(conn, "system", "system", "resolve", cid, "Confirmed fraud" if fraud else "Cleared")
+        if delay: time.sleep(delay*.4)
+        db.tl_add(conn,cid,t); db.act_add(conn,cid,t)
+    outcome="Confirmed fraud" if fraud else "Cleared"
+    db.set_case(conn,cid,outcome=outcome,stage="resolved",status="Resolved",resolved_at=db.now(),live=live)
+    _write_case_memory(conn,cid)
+    db.audit(conn,"system","system","resolve",cid,outcome)

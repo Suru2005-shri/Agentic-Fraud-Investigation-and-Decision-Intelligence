@@ -1,119 +1,154 @@
-"""Risk, similarity and evidence-sufficiency scoring.
+"""Evidence-driven scoring for the HHG benchmark.
 
-All numbers shown in the interface come from these functions and the data in the
-database. Weights are documented so they can be tuned or replaced with a trained model.
+The score is a triage estimate, not a ground-truth label. The agent uses independent
+signals from transaction history, identity data, graph relationships and closed cases.
 """
-from datetime import datetime
-from math import log
-
+from datetime import datetime, timedelta
+from math import exp, log
 from . import graph
 
+def _dt(v): return datetime.fromisoformat(str(v))
 
-def similarity(c, h, net, ipnet, cat_of) -> float:
-    s = 0.0
-    if h["account"] in net:
-        s += 0.40  # earlier case on an account sharing this case's device
-    elif h["account"] in ipnet:
-        s += 0.20
-    if h["pattern"] == c["pattern"]:
-        s += 0.25
-    if cat_of(h["merchant_id"]) == cat_of(c["merchant_id"]):
-        s += 0.10
-    diff = abs(log(max(h["amount"], 1) / max(c["amount"], 1)))
-    s += 0.15 * max(0.0, 1 - diff / 2.5)
-    return min(s, 0.97)
+def _profile_shared(conn,profile,account,when):
+    if not profile: return []
+    start=(when-timedelta(days=7)).isoformat(sep=" ")
+    end=(when+timedelta(days=7)).isoformat(sep=" ")
+    return graph.shared_profiles(conn,profile,account,start,end)
 
+def _card_testing(rows,when):
+    # Three or more sub-$5 online authorizations inside one hour, followed by >$100.
+    rows=sorted(rows,key=lambda r:r["ts"])
+    for i,r in enumerate(rows):
+        if r["channel"]!="online" or r["amount"]>=5: continue
+        st=_dt(r["ts"]); small=[x for x in rows[i:] if x["channel"]=="online" and x["amount"]<5 and _dt(x["ts"])<=st+timedelta(hours=1)]
+        if len(small)>=3:
+            large=[x for x in rows if _dt(x["ts"])>_dt(small[-1]["ts"]) and _dt(x["ts"])<=_dt(small[-1]["ts"])+timedelta(hours=2) and x["amount"]>100]
+            if large: return True,small,large
+    return False,[],[]
 
-def _fmt_date(iso: str | None) -> str:
-    try:
-        return datetime.fromisoformat(iso).strftime("%d %b %Y")
-    except Exception:
-        return ""
-
-
-def rank_priors(conn, c, net: set, ipnet: set, limit: int = 8, accounts_only: set | None = None,
-                dev_label: str | None = None) -> list[dict]:
-    """Resolved cases most similar to case `c`, best first."""
-    rows = conn.execute(
-        "select id, account, pattern, amount, merchant_id, outcome, resolved_at, live "
-        "from cases where stage='resolved' and id!=?", (c["id"],)).fetchall()
-    cat_of = lambda m: graph.merchant_category(conn, m)  # noqa: E731
-    net_all = set(net) | {c["account"]}
-    out = []
+def rank_priors(conn,c,net=None,ipnet=None,limit=8,accounts_only=None,dev_label=None):
+    """Rank closed case memory using graph-linked device/case relationships plus amount."""
+    rows=conn.execute("""select id,account,pattern,amount,merchant_id,outcome,resolved_at,live
+                         from cases where stage='resolved' and id!=?""",(c["id"],)).fetchall()
+    tx=conn.execute("select profile,device,addr1 from transactions where id=?",(c["tx"],)).fetchone()
+    profile=tx["profile"] if tx else None
+    device=tx["device"] if tx else None
+    device_cases=set()
+    if device:
+        device_cases={r[0] for r in conn.execute(
+            "select src from edges where dst=? and rel='case used device'",(device,)).fetchall()}
+    out=[]
     for h in rows:
-        if accounts_only is not None and h["account"] not in accounts_only:
-            continue
-        sim = similarity(c, h, net_all, ipnet, cat_of)
-        if h["account"] in net_all:
-            why = f"shares device {dev_label}" if dev_label and h["account"] != c["account"] else "earlier case on this account"
-        elif h["account"] in ipnet:
-            why = "shares an IP address"
-        elif h["pattern"] == c["pattern"]:
-            why = "same fraud pattern"
-        else:
-            why = "similar amount and merchant type"
-        out.append({"id": h["id"], "sim": round(sim * 100), "out": h["outcome"], "pat": h["pattern"],
-                    "date": _fmt_date(h["resolved_at"]), "why": why, "fresh": bool(h["live"])})
-    out.sort(key=lambda p: (-p["sim"], p["id"]))
+        if accounts_only is not None and h["account"] not in accounts_only: continue
+        score=0.12; why=[]
+        if h["account"]==c["account"]:
+            score+=0.55; why.append("same card")
+        if h["id"] in device_cases:
+            score+=0.25; why.append("shared device profile")
+        diff=abs(log(max(float(h["amount"] or 1),1)/max(float(c["amount"] or 1),1)))
+        score+=0.10*max(0.0,1-diff/2.5)
+        if h["pattern"]==c["pattern"] and c["pattern"]!="undetermined":
+            score+=0.10; why.append("same pattern")
+        if not why: why.append("similar amount")
+        out.append({"id":h["id"],"sim":round(min(.97,score)*100),"out":h["outcome"],
+                    "pat":h["pattern"],"date":str(h["resolved_at"])[:10],
+                    "why":"; ".join(why),"fresh":bool(h["live"])})
+    out.sort(key=lambda x:(-x["sim"],x["id"]))
     return out[:limit]
 
 
-def analyze(conn, c) -> dict:
-    """Collect the facts the agent reasons over for one case."""
-    acct = c["account"]
-    hist = conn.execute("select amount, merchant from transactions where account=? and is_case=0", (acct,)).fetchall()
-    n = len(hist)
-    avg = sum(r["amount"] for r in hist) / n if n else 10000.0
-    ratio = c["amount"] / max(avg, 1000.0)
-    seen = {r["merchant"] for r in hist}
-    devs = graph.devices_of(conn, acct)
-    mates: list[str] = []
-    for d in devs:
-        mates += [a for a in graph.device_accounts(conn, d) if a != acct and a not in mates]
-    ip_mates: list[str] = []
-    for ip in graph.ips_of(conn, acct):
-        ip_mates += [a for a in graph.ip_accounts(conn, ip) if a != acct and a not in ip_mates and a not in mates]
-    dev = devs[0] if devs else None
-    priors = rank_priors(conn, c, set(mates), set(ip_mates), limit=8, dev_label=dev)
-    fraud = [p["sim"] for p in priors if p["out"] == "Confirmed fraud"]
-    return {
-        "avg": avg, "n_hist": n, "ratio": ratio, "first_time": c["merchant_id"] not in seen,
-        "risky_merchant": graph.merchant_category(conn, c["merchant_id"]) in graph.RISKY_CATEGORIES,
-        "device": dev, "mates": mates, "ip_mates": ip_mates, "priors": priors,
-        "best_any": (priors[0]["sim"] / 100) if priors else 0.0,
-        "best_fraud": (max(fraud) / 100) if fraud else 0.0,
+def infer_pattern(conn,c,a):
+    if "analyst request" in str(c["trigger"]).lower() and a["shared_accounts"]:
+        return "undocumented"
+    if a["card_testing"]: return "card_testing"
+    if a["out_region"]: return "out_of_region_use"
+    if a["new_device"] and a["online"] and (a["burst_count"]>=2 or a["same_fraud"]>=1):
+        return "card_not_present_new_device"
+    if a["mixed_channel"] and a["new_device"] and a["online"]:
+        return "account_takeover"
+    if a["online"]:
+        return "card_not_present_fraud"
+    # Repeated disputed card-present activity that does not match the region pattern.
+    if a["customer_report"] and a["same_fraud"]>=2:
+        return "undocumented"
+    return "none"
+
+def analyze(conn,c):
+    acct=c["account"]; t=_dt(c["opened_at"])
+    tx=conn.execute("select * from transactions where id=?",(c["tx"],)).fetchone()
+    if not tx:
+        return {"pattern":"none","probability":0.1,"priors":[],"mates":[],"shared_accounts":[]}
+    hist=conn.execute("select * from transactions where account=? and ts<? order by ts",(acct,c["opened_at"])).fetchall()
+    recent=conn.execute("select * from transactions where account=? and ts>=? and ts<=? order by ts",
+                        (acct,(t-timedelta(days=14)).isoformat(sep=" "), (t+timedelta(hours=1)).isoformat(sep=" "))).fetchall()
+    w48=[r for r in recent if t-timedelta(hours=48)<=_dt(r["ts"])<=t]
+    online=[r for r in w48 if r["channel"]=="online"]
+    new_device=str(tx["id_15"] or "").lower()=="new"
+    profile=tx["profile"]
+    shared=_profile_shared(conn,profile,acct,t)
+    shared_accounts=sorted({r["account"] for r in shared})
+    strong_shared=bool(profile and 0<len(shared_accounts)<=10)
+    prior=rank_priors(conn,c,limit=8)
+    same=conn.execute("select count(*) n,sum(case when outcome='Confirmed fraud' then 1 else 0 end) f from cases where account=? and stage='resolved'",(acct,)).fetchone()
+    same_n=int(same["n"] or 0); same_f=int(same["f"] or 0)
+    avg=sum(float(r["amount"]) for r in hist)/len(hist) if hist else float(tx["amount"])
+    ratio=float(tx["amount"])/max(avg,1)
+    regions=[r["addr1"] for r in hist if r["channel"]=="in_person" and r["addr1"] is not None]
+    region_counts={}
+    for x in regions: region_counts[x]=region_counts.get(x,0)+1
+    out_region=(tx["channel"]=="in_person" and tx["addr1"] is not None and
+                len(regions)>=5 and tx["addr1"] not in region_counts)
+    cardtest,small,large=_card_testing(w48,t)
+    mixed=bool({r["channel"] for r in w48}=={"online","in_person"}) or (
+        sum(r["channel"]=="online" for r in recent)>0 and sum(r["channel"]=="in_person" for r in recent)>0)
+    customer_report="customer" in str(c["trigger"]).lower() or "never made" in str(c["trigger"]).lower()
+    burst_count=len(online)
+    # Independent evidence -> calibrated probability, deliberately separated from risk_score.
+    p=.10
+    p += .24*float(tx["risk_score"] or 0)
+    if new_device: p+=.10
+    if customer_report: p+=.48
+    if same_n: p+=.18*(same_f/max(same_n,1))
+    if strong_shared: p+=.12
+    if cardtest: p+=.18
+    if burst_count>=2: p+=.08
+    if burst_count>=5: p+=.08
+    if out_region: p+=.16
+    if mixed: p+=.06
+    if ratio>=3: p+=.05
+    p=max(.03,min(.98,p))
+    a={
+      "avg":avg,"ratio":ratio,"hist_count":len(hist),"recent":recent,"w48":w48,"online":online,
+      "new_device":new_device,"profile":profile,"shared":shared,"shared_accounts":shared_accounts,
+      "strong_shared":strong_shared,"same_n":same_n,"same_fraud":same_f,"priors":prior,
+      "burst_count":burst_count,"mixed_channel":mixed,"customer_report":customer_report,
+      "out_region":out_region,"card_testing":cardtest,"small_testing":small,"large_after_testing":large,
+      "probability":p,"pattern":"none","current":tx
     }
+    a["pattern"]=infer_pattern(conn,c,a)
+    return a
 
+def parts(a):
+    # UI meters: independent evidence coverage, not a probability.
+    suff=0.12
+    if a["hist_count"]>=10: suff+=.12
+    elif a["hist_count"]>=3: suff+=.07
+    if a["same_fraud"]: suff+=min(.18,.06*a["same_fraud"])
+    if a["profile"]: suff+=.10
+    if a["strong_shared"]: suff+=.12
+    if a["burst_count"]>=2: suff+=.12
+    if a["card_testing"]: suff+=.16
+    if a["out_region"]: suff+=.12
+    if a["new_device"]: suff+=.08
+    if a["customer_report"]: suff+=.18
+    suff=min(.98,suff)
+    conf=round(suff*100)
+    risk=round(a["probability"]*99)
+    return {"risk":risk,"confidence":conf,"uncertainty":100-conf,"suff":conf}
 
-def parts(a: dict) -> tuple[dict, dict]:
-    """Risk points (0-100 scale) and evidence-sufficiency fractions, per source of evidence."""
-    risk = {
-        "base": 5.0,
-        "anomaly": 30.0 * min(a["ratio"] / 10.0, 1.0),
-        "device": 22.5 * min(len(a["mates"]), 3) / 3.0,
-        "prior": 20.0 * a["best_fraud"],
-        "merchant": (8.0 if a["first_time"] else 0.0) + (3.0 if a["risky_merchant"] else 0.0),
-    }
-    suff = {
-        "transaction": 0.22 * min(1.0, a["ratio"] / 5.0),
-        "history": 0.10 * min(1.0, a["n_hist"] / 6.0),
-        "graph": 0.20 * min(1.0, (len(a["mates"]) + (1 if a["ip_mates"] else 0)) / 3.0),
-        "prior": 0.20 * a["best_any"],
-        "policy": 0.08,
-    }
-    return risk, suff
+def triage(conn,c):
+    a=analyze(conn,c); p=parts(a)
+    return p["risk"],p["suff"]
 
-
-def unc_label(unc: int) -> str:
-    return "Low" if unc <= 12 else "Medium" if unc <= 36 else "High"
-
-
-def triage(conn, c) -> tuple[int, int]:
-    """Risk score and evidence sufficiency the agent would reach, used to rank cases before they are opened."""
-    a = analyze(conn, c)
-    rp, sp = parts(a)
-    risk = min(99, round(sum(rp.values())))
-    suff = round(min(0.98, sum(sp.values())) * 100)
-    if risk < 35:
-        suff = max(suff, 88)
-    return risk, suff
+def unc_label(unc):
+    return "Low" if unc<=12 else "Medium" if unc<=36 else "High"

@@ -303,7 +303,7 @@ def memory(case: str | None = None, q: str = "", min: int = 0, limit: int = 60,
 
 def _policy_query(c, a) -> str:
     risk = c["risk"] or c["triage"]
-    q = (f"{c['pattern']} payment {a['ratio']:.0f} times average amount above 50,000 rupees device linked to "
+    q = (f"{c['pattern']} payment {a['ratio']:.0f} times average amount device linked to "
          f"{len(a['mates'])} unrelated accounts customer authorization block")
     return q + (" low risk release monitoring" if risk < 35 else "")
 
@@ -317,7 +317,7 @@ def case_policy(cid: str, user=Depends(current_user), conn=Depends(get_db)):
                             (cid,)).fetchone()[0]
     checks = [
         {"state": "ok" if c["amount"] > 50000 else "no", "title": f"Payment amount {engine.inr(c['amount'])}",
-         "detail": "Above \u20B950,000, so section 4.2 applies" if c["amount"] > 50000 else "Below the \u20B950,000 trigger for section 4.2"},
+         "detail": "Above $50,000, so section 4.2 applies" if c["amount"] > 50000 else "Below the \u20B950,000 trigger for section 4.2"},
         {"state": "ok" if answered else "warn", "title": "Customer authorization established",
          "detail": c["add_ev"] if answered else "Not yet established. Request customer validation or step-up authentication"},
         {"state": "warn" if (engine.needs_approval(c["rec"]) and c["stage"] != "resolved") else "ok",
