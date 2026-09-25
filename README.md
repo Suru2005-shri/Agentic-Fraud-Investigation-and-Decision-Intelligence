@@ -349,91 +349,91 @@ The screenshots cover areas including:
 
 ### 02_1000009522
 
-![02_1000009522](docs/screenshots/tigergraph_savanna/02_1000009522.jpg)
+![02_1000009522](docs/tigergraph_savanna/02_1000009522.jpg)
 
 ### 03_image-1790318351746
 
-![03_image-1790318351746](docs/screenshots/tigergraph_savanna/03_image-1790318351746.jpg)
+![03_image-1790318351746](docs/tigergraph_savanna/03_image-1790318351746.jpg)
 
 ### 04_image-1790316603866
 
-![04_image-1790316603866](docs/screenshots/tigergraph_savanna/04_image-1790316603866.jpg)
+![04_image-1790316603866](docs/tigergraph_savanna/04_image-1790316603866.jpg)
 
 ### 05_image-1790319449474
 
-![05_image-1790319449474](docs/screenshots/tigergraph_savanna/05_image-1790319449474.jpg)
+![05_image-1790319449474](docs/tigergraph_savanna/05_image-1790319449474.jpg)
 
 ### 06_image-1790317106419
 
-![06_image-1790317106419](docs/screenshots/tigergraph_savanna/06_image-1790317106419.jpg)
+![06_image-1790317106419](docs/tigergraph_savanna/06_image-1790317106419.jpg)
 
 ### 07_image-1790316819728
 
-![07_image-1790316819728](docs/screenshots/tigergraph_savanna/07_image-1790316819728.jpg)
+![07_image-1790316819728](docs/tigergraph_savanna/07_image-1790316819728.jpg)
 
 ### 08_image-1790318745935
 
-![08_image-1790318745935](docs/screenshots/tigergraph_savanna/08_image-1790318745935.jpg)
+![08_image-1790318745935](docs/tigergraph_savanna/08_image-1790318745935.jpg)
 
 ### 09_image-1790318380373
 
-![09_image-1790318380373](docs/screenshots/tigergraph_savanna/09_image-1790318380373.jpg)
+![09_image-1790318380373](docs/tigergraph_savanna/09_image-1790318380373.jpg)
 
 ### 10_d5a78566-145c-456a-9115-37e9413ad266
 
-![10_d5a78566-145c-456a-9115-37e9413ad266](docs/screenshots/tigergraph_savanna/10_d5a78566-145c-456a-9115-37e9413ad266.png)
+![10_d5a78566-145c-456a-9115-37e9413ad266](docs/tigergraph_savanna/10_d5a78566-145c-456a-9115-37e9413ad266.png)
 
 ### 11_1000009523
 
-![11_1000009523](docs/screenshots/tigergraph_savanna/11_1000009523.jpg)
+![11_1000009523](docs/tigergraph_savanna/11_1000009523.jpg)
 
 ### 12_image-1790319757243
 
-![12_image-1790319757243](docs/screenshots/tigergraph_savanna/12_image-1790319757243.jpg)
+![12_image-1790319757243](docs/tigergraph_savanna/12_image-1790319757243.jpg)
 
 ### 13_image-1790318781691
 
-![13_image-1790318781691](docs/screenshots/tigergraph_savanna/13_image-1790318781691.jpg)
+![13_image-1790318781691](docs/tigergraph_savanna/13_image-1790318781691.jpg)
 
 ### 14_1000009524
 
-![14_1000009524](docs/screenshots/tigergraph_savanna/14_1000009524.jpg)
+![14_1000009524](docs/tigergraph_savanna/14_1000009524.jpg)
 
 ### 15_image-1790317566434
 
-![15_image-1790317566434](docs/screenshots/tigergraph_savanna/15_image-1790317566434.jpg)
+![15_image-1790317566434](docs/tigergraph_savanna/15_image-1790317566434.jpg)
 
 ### 16_image-1790318307825
 
-![16_image-1790318307825](docs/screenshots/tigergraph_savanna/16_image-1790318307825.jpg)
+![16_image-1790318307825](docs/tigergraph_savanna/16_image-1790318307825.jpg)
 
 ### 17_image-1790319091548
 
-![17_image-1790319091548](docs/screenshots/tigergraph_savanna/17_image-1790319091548.jpg)
+![17_image-1790319091548](docs/tigergraph_savanna/17_image-1790319091548.jpg)
 
 ### 18_9073c729-3704-43a0-a51b-390392aa0de1
 
-![18_9073c729-3704-43a0-a51b-390392aa0de1](docs/screenshots/tigergraph_savanna/18_9073c729-3704-43a0-a51b-390392aa0de1.png)
+![18_9073c729-3704-43a0-a51b-390392aa0de1](docs/tigergraph_savanna/18_9073c729-3704-43a0-a51b-390392aa0de1.png)
 
 ### 19_image-1790318643669
 
-![19_image-1790318643669](docs/screenshots/tigergraph_savanna/19_image-1790318643669.jpg)
+![19_image-1790318643669](docs/tigergraph_savanna/19_image-1790318643669.jpg)
 
 ### 20_image-1790319013230
 
-![20_image-1790319013230](docs/screenshots/tigergraph_savanna/20_image-1790319013230.jpg)
+![20_image-1790319013230](docs/tigergraph_savanna/20_image-1790319013230.jpg)
 
 ### 21_image-1790317718447
 
-![21_image-1790317718447](docs/screenshots/tigergraph_savanna/21_image-1790317718447.jpg)
+![21_image-1790317718447](docs/tigergraph_savanna/21_image-1790317718447.jpg)
 
 ### 22_28b2a033-c745-4464-a7a4-6d99b9330967
 
-![22_28b2a033-c745-4464-a7a4-6d99b9330967](docs/screenshots/tigergraph_savanna/22_28b2a033-c745-4464-a7a4-6d99b9330967.png)
+![22_28b2a033-c745-4464-a7a4-6d99b9330967](docs/tigergraph_savanna/22_28b2a033-c745-4464-a7a4-6d99b9330967.png)
 
 ### 23_image-1790320315808
 
-![23_image-1790320315808](docs/screenshots/tigergraph_savanna/23_image-1790320315808.jpg)
+![23_image-1790320315808](docs/tigergraph_savanna/23_image-1790320315808.jpg)
 
 ### 24_image-1790318104385
 
@@ -497,55 +497,55 @@ The screenshots cover areas including:
 
 ### 39_image-1790318231175
 
-![39_image-1790318231175](docs/screenshots/tigergraph_savanna/39_image-1790318231175.jpg)
+![39_image-1790318231175](docs/tigergraph_savanna/39_image-1790318231175.jpg)
 
 ### 40_image-1790317811405
 
-![40_image-1790317811405](docs/screenshots/tigergraph_savanna/40_image-1790317811405.jpg)
+![40_image-1790317811405](docs/tigergraph_savanna/40_image-1790317811405.jpg)
 
 ### 41_image-1790316952317
 
-![41_image-1790316952317](docs/screenshots/tigergraph_savanna/41_image-1790316952317.jpg)
+![41_image-1790316952317](docs/tigergraph_savanna/41_image-1790316952317.jpg)
 
 ### 42_image-1790316642840
 
-![42_image-1790316642840](docs/screenshots/tigergraph_savanna/42_image-1790316642840.jpg)
+![42_image-1790316642840](docs/tigergraph_savanna/42_image-1790316642840.jpg)
 
 ### 43_image-1790319371195
 
-![43_image-1790319371195](docs/screenshots/tigergraph_savanna/43_image-1790319371195.jpg)
+![43_image-1790319371195](docs/tigergraph_savanna/43_image-1790319371195.jpg)
 
 ### 44_image-1790317660703
 
-![44_image-1790317660703](docs/screenshots/tigergraph_savanna/44_image-1790317660703.jpg)
+![44_image-1790317660703](docs/tigergraph_savanna/44_image-1790317660703.jpg)
 
 ### 45_image-1790320670473
 
-![45_image-1790320670473](docs/screenshots/tigergraph_savanna/45_image-1790320670473.jpg)
+![45_image-1790320670473](docs/tigergraph_savanna/45_image-1790320670473.jpg)
 
 ### 46_image-1790320754969
 
-![46_image-1790320754969](docs/screenshots/tigergraph_savanna/46_image-1790320754969.jpg)
+![46_image-1790320754969](docs/tigergraph_savanna/46_image-1790320754969.jpg)
 
 ### 47_image-1790316241446
 
-![47_image-1790316241446](docs/screenshots/tigergraph_savanna/47_image-1790316241446.jpg)
+![47_image-1790316241446](docs/tigergraph_savanna/47_image-1790316241446.jpg)
 
 ### 48_image-1790318591853
 
-![48_image-1790318591853](docs/screenshots/tigergraph_savanna/48_image-1790318591853.jpg)
+![48_image-1790318591853](docs/tigergraph_savanna/48_image-1790318591853.jpg)
 
 ### current_28b2a033-c745-4464-a7a4-6d99b9330967
 
-![current_28b2a033-c745-4464-a7a4-6d99b9330967](docs/screenshots/tigergraph_savanna/current_28b2a033-c745-4464-a7a4-6d99b9330967.png)
+![current_28b2a033-c745-4464-a7a4-6d99b9330967](docs/tigergraph_savanna/current_28b2a033-c745-4464-a7a4-6d99b9330967.png)
 
 ### current_9073c729-3704-43a0-a51b-390392aa0de1
 
-![current_9073c729-3704-43a0-a51b-390392aa0de1](docs/screenshots/tigergraph_savanna/current_9073c729-3704-43a0-a51b-390392aa0de1.png)
+![current_9073c729-3704-43a0-a51b-390392aa0de1](docs/tigergraph_savanna/current_9073c729-3704-43a0-a51b-390392aa0de1.png)
 
 ### current_d5a78566-145c-456a-9115-37e9413ad266
 
-![current_d5a78566-145c-456a-9115-37e9413ad266](docs/screenshots/tigergraph_savanna/current_d5a78566-145c-456a-9115-37e9413ad266.png)
+![current_d5a78566-145c-456a-9115-37e9413ad266](docs/tigergraph_savanna/current_d5a78566-145c-456a-9115-37e9413ad266.png)
 
 
 ## 16. How to Reproduce the TigerGraph Setup
