@@ -1,0 +1,7 @@
+INTERPRET QUERY () FOR GRAPH ARGUS_FRAUD {
+  Result = SELECT c
+           FROM Customer:c
+           LIMIT 10;
+
+  PRINT Result;
+}

@@ -1,0 +1,7 @@
+INTERPRET QUERY () FOR GRAPH ARGUS_FRAUD {
+  Result = SELECT t
+           FROM Card:c - (CardTransaction) - Transaction:t
+           LIMIT 10;
+
+  PRINT Result;
+}

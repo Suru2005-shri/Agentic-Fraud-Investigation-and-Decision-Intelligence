@@ -1,0 +1,8 @@
+INTERPRET QUERY () FOR GRAPH ARGUS_FRAUD {
+  Result = SELECT t
+           FROM Transaction:t
+           WHERE t.risk_score >= 0.80
+           LIMIT 10;
+
+  PRINT Result;
+}
