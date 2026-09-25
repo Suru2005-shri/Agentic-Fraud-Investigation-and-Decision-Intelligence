@@ -320,33 +320,7 @@ ARGUS_FRAUD_TigerGraph_README/
     └── ARGUS_FRAUD_SCHEMA.md
 ```
 
-## 14. Screenshot Evidence
 
-The `docs/screenshots/tigergraph_savanna/` folder contains the captured TigerGraph/Savanna evidence used while building and verifying the project.
-
-The screenshots cover areas including:
-
-- TigerGraph schema
-- Vertex and edge types
-- Customer data
-- Card data
-- Transaction data
-- Data loading
-- Query Editor
-- GSQL execution
-- JSON query results
-- Graph visualization
-- CardTransaction schema
-- CardTransaction mapping
-- Explore Graph
-- Project/workspace views
-
-
-## 15A. ARGUS Website Screenshots
-
-These are the **actual ARGUS website UI screenshots** used for the project demo. They are stored separately from the TigerGraph Savanna evidence so the repository does not mix application UI with database screenshots.
-
-![ARGUS Website Screenshot Gallery](docs/ARGUS_WEBSITE_SCREENSHOT_GALLERY.jpg)
 
 ### Individual Screens
 
