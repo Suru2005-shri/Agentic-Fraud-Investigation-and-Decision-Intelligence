@@ -43,6 +43,9 @@ TigerGraph Savanna acts as the graph evidence layer. The graph schema is designe
 7. Run GSQL queries for high-risk transactions and relationship discovery.
 8. Provide evidence that can be consumed by the ARGUS investigation agent.
 
+## Architeture Diagram
+docs/architecture.png
+
 ## 3. Technology
 
 - TigerGraph Savanna / TigerGraph Cloud
