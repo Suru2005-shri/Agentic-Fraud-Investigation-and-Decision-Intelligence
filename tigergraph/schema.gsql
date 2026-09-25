@@ -1,0 +1,74 @@
+// ARGUS / HHG TigerGraph schema
+// Designed for TigerGraph 4.x / Savanna.
+// Core fields are intentionally explicit; the original CSVs remain the source of truth.
+
+CREATE VERTEX Customer (
+  PRIMARY_ID id STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX Card (
+  PRIMARY_ID id STRING,
+  customer_id STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX Transaction (
+  PRIMARY_ID id STRING,
+  amount DOUBLE,
+  ts STRING,
+  product_cd STRING,
+  channel STRING,
+  risk_score DOUBLE,
+  card1 STRING,
+  card5 STRING,
+  addr1 STRING,
+  addr2 STRING,
+  p_emaildomain STRING,
+  r_emaildomain STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX DeviceProfile (
+  PRIMARY_ID id STRING,
+  profile STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX BillingRegion (
+  PRIMARY_ID id STRING,
+  region_code STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX EmailDomain (
+  PRIMARY_ID id STRING,
+  domain STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX ClosedCase (
+  PRIMARY_ID id STRING,
+  pattern STRING,
+  outcome STRING,
+  exposure_usd DOUBLE
+) WITH primary_id_as_attribute="true";
+
+CREATE VERTEX InvestigationCase (
+  PRIMARY_ID id STRING,
+  benchmark_no INT,
+  pattern STRING,
+  status STRING
+) WITH primary_id_as_attribute="true";
+
+CREATE DIRECTED EDGE CustomerCard (FROM Customer, TO Card);
+CREATE DIRECTED EDGE CardCustomer (FROM Card, TO Customer);
+CREATE DIRECTED EDGE CardTransaction (FROM Card, TO Transaction);
+CREATE DIRECTED EDGE TransactionCard (FROM Transaction, TO Card);
+CREATE DIRECTED EDGE CardDevice (FROM Card, TO DeviceProfile);
+CREATE DIRECTED EDGE DeviceCard (FROM DeviceProfile, TO Card);
+CREATE DIRECTED EDGE CardRegion (FROM Card, TO BillingRegion);
+CREATE DIRECTED EDGE RegionCard (FROM BillingRegion, TO Card);
+CREATE DIRECTED EDGE TransactionEmail (FROM Transaction, TO EmailDomain);
+CREATE DIRECTED EDGE CaseCard (FROM ClosedCase, TO Card);
+CREATE DIRECTED EDGE CaseDevice (FROM ClosedCase, TO DeviceProfile);
+CREATE DIRECTED EDGE InvestigationCard (FROM InvestigationCase, TO Card);
+CREATE DIRECTED EDGE InvestigationTransaction (FROM InvestigationCase, TO Transaction);
+CREATE DIRECTED EDGE InvestigationDevice (FROM InvestigationCase, TO DeviceProfile);
+CREATE DIRECTED EDGE InvestigationPriorCase (FROM InvestigationCase, TO ClosedCase);
+
+CREATE GRAPH ARGUS_FRAUD (*);

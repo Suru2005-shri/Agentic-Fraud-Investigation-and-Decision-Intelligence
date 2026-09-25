@@ -1,0 +1,52 @@
+USE GRAPH ARGUS_FRAUD
+
+CREATE LOADING JOB load_argus FOR GRAPH ARGUS_FRAUD {
+  DEFINE FILENAME customers = "$sys.data_root/customers.csv";
+  DEFINE FILENAME cards = "$sys.data_root/cards.csv";
+  DEFINE FILENAME transactions = "$sys.data_root/transactions_core.csv";
+  DEFINE FILENAME devices = "$sys.data_root/devices.csv";
+  DEFINE FILENAME regions = "$sys.data_root/regions.csv";
+  DEFINE FILENAME emails = "$sys.data_root/email_domains.csv";
+  DEFINE FILENAME closed_cases = "$sys.data_root/closed_cases.csv";
+  DEFINE FILENAME investigations = "$sys.data_root/investigation_cases.csv";
+
+  DEFINE FILENAME customer_card = "$sys.data_root/customer_card.csv";
+  DEFINE FILENAME card_txn = "$sys.data_root/card_transaction.csv";
+  DEFINE FILENAME card_device = "$sys.data_root/card_device.csv";
+  DEFINE FILENAME card_region = "$sys.data_root/card_region.csv";
+  DEFINE FILENAME txn_email = "$sys.data_root/transaction_email.csv";
+  DEFINE FILENAME case_card = "$sys.data_root/case_card.csv";
+  DEFINE FILENAME case_device = "$sys.data_root/case_device.csv";
+  DEFINE FILENAME inv_card = "$sys.data_root/investigation_card.csv";
+  DEFINE FILENAME inv_txn = "$sys.data_root/investigation_transaction.csv";
+  DEFINE FILENAME inv_device = "$sys.data_root/investigation_device.csv";
+  DEFINE FILENAME inv_prior = "$sys.data_root/investigation_prior_case.csv";
+
+  LOAD customers TO VERTEX Customer VALUES ($0) USING header="true", separator=",";
+  LOAD cards TO VERTEX Card VALUES ($0,$1) USING header="true", separator=",";
+  LOAD transactions TO VERTEX Transaction VALUES ($0,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    USING header="true", separator=",";
+  LOAD devices TO VERTEX DeviceProfile VALUES ($0,$1) USING header="true", separator=",";
+  LOAD regions TO VERTEX BillingRegion VALUES ($0,$1) USING header="true", separator=",";
+  LOAD emails TO VERTEX EmailDomain VALUES ($0,$1) USING header="true", separator=",";
+  LOAD closed_cases TO VERTEX ClosedCase VALUES ($0,$1,$2,$3) USING header="true", separator=",";
+  LOAD investigations TO VERTEX InvestigationCase VALUES ($0,$1,$2,$3) USING header="true", separator=",";
+
+  LOAD customer_card TO EDGE CustomerCard VALUES ($0,$1) USING header="true", separator=",";
+  LOAD customer_card TO EDGE CardCustomer VALUES ($1,$0) USING header="true", separator=",";
+  LOAD card_txn TO EDGE CardTransaction VALUES ($0,$1) USING header="true", separator=",";
+  LOAD card_txn TO EDGE TransactionCard VALUES ($1,$0) USING header="true", separator=",";
+  LOAD card_device TO EDGE CardDevice VALUES ($0,$1) USING header="true", separator=",";
+  LOAD card_device TO EDGE DeviceCard VALUES ($1,$0) USING header="true", separator=",";
+  LOAD card_region TO EDGE CardRegion VALUES ($0,$1) USING header="true", separator=",";
+  LOAD card_region TO EDGE RegionCard VALUES ($1,$0) USING header="true", separator=",";
+  LOAD txn_email TO EDGE TransactionEmail VALUES ($0,$1) USING header="true", separator=",";
+  LOAD case_card TO EDGE CaseCard VALUES ($0,$1) USING header="true", separator=",";
+  LOAD case_device TO EDGE CaseDevice VALUES ($0,$1) USING header="true", separator=",";
+  LOAD inv_card TO EDGE InvestigationCard VALUES ($0,$1) USING header="true", separator=",";
+  LOAD inv_txn TO EDGE InvestigationTransaction VALUES ($0,$1) USING header="true", separator=",";
+  LOAD inv_device TO EDGE InvestigationDevice VALUES ($0,$1) USING header="true", separator=",";
+  LOAD inv_prior TO EDGE InvestigationPriorCase VALUES ($0,$1) USING header="true", separator=",";
+}
+
+RUN LOADING JOB load_argus
